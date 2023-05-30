@@ -5,6 +5,18 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import sys
 
+class CellWidget(QtWidgets.QLabel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setStyleSheet("background-color: #808080;")  # Set initial color
+        self.setStyleSheet("background-color: white;")  # Set the background color to white
+        self.resize(40, 40)
+
+    def mousePressEvent(self, event):
+        selected_color = self.parent().parent().parent().parent().parent().color_selection.currentText()
+        if selected_color:  # Check if a color was selected
+            self.setStyleSheet("background-color: " + selected_color + ";")  # Set the selected color
+
 class SquareGridWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -22,11 +34,8 @@ class SquareGridWidget(QtWidgets.QWidget):
     def populate_grid(self, row_count, column_count, cell_size=50, spacing=1):
         for i in range(row_count):
             for j in range(column_count):
-                label = QtWidgets.QLabel("X")
-                label.setFixedSize(cell_size, cell_size)
-                label.setStyleSheet("background-color: white;")  # Set the background color to white
-                self.grid_layout.addWidget(label, i, j)
-                label.setAlignment(QtCore.Qt.AlignCenter)  # Align the QLabel to the center
+                cell_widget = CellWidget(self)
+                self.grid_layout.addWidget(cell_widget, i, j)
         self.grid_layout.setSpacing(1)  # set minimum spacing in pixels
         self.grid_layout.setContentsMargins(1, 1, 1, 1)  # set margins in pixels
         total_size = cell_size * row_count + spacing * (row_count - 1)
@@ -49,8 +58,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scroll_area.setWidget(self.square_grid_widget)
         self.central_layout.addWidget(self.scroll_area, 3)
 
-        self.input_box = QtWidgets.QLineEdit(self.central_widget)
-        self.central_layout.addWidget(self.input_box, 1)
+        # Create a dropdown menu for color selection
+        self.color_selection = QtWidgets.QComboBox(self.central_widget)
+        self.color_selection.addItem('#FFFFFF')  # Add white
+        self.color_selection.addItem('#FF0000')  # Add red
+        self.color_selection.addItem('#00FF00')  # Add green
+        self.color_selection.addItem('#0000FF')  # Add blue
+        self.central_layout.addWidget(self.color_selection, 1)
+
+        # Create an input box for integer input
+        self.integer_input = QtWidgets.QLineEdit(self.central_widget)
+        self.central_layout.addWidget(self.integer_input)
 
         self.square_grid_widget.populate_grid(30, 30)
 
