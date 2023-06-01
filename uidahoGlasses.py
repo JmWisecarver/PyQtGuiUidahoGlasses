@@ -96,6 +96,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.side_layout.addWidget(self.button, 1)
         self.button.clicked.connect(self.on_reset_clicked)
 
+        self.button = QPushButton('save', self.side_widget)
+        self.side_layout.addWidget(self.button, 1)
+        self.button.clicked.connect(self.on_save_clicked)
+
 
         #populate the square_grid we added earlier. This can be changed later based on how comfy the square sizes are.
         self.square_grid_widget.populate_grid(30, 20)
@@ -107,8 +111,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 cell_widget.setStyleSheet("background-color: white;")  # Change the cell's color to white
                 cell_widget.value = -1
                 cell_widget.update_display()
-                print(cell_widget.x_coord, cell_widget.y_coord)
 
+    def on_save_clicked(self):
+        save_file = open("idahoGlassesSave.txt", "w")
+        for i in range(self.square_grid_widget.grid_layout.count()):
+            cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
+            if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
+                if int(cell_widget.value) > -1: 
+                    save_file.write(str(cell_widget.value))
+                    save_file.write(" ")
 
 
 if __name__ == '__main__':
