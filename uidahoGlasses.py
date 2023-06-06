@@ -61,6 +61,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.createMenuBar()
+
         self.central_widget = QtWidgets.QWidget(self)  # Create a new central widget
         self.setCentralWidget(self.central_widget)
 
@@ -109,8 +111,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         #populate the square_grid we added earlier. This can be changed later based on how comfy the square sizes are.
-        self.square_grid_widget.populate_grid(30, 20)
+        self.square_grid_widget.populate_grid(30, 30)
 
+    def createMenuBar(self):
+        menuBar = QMenuBar(self)
+        fileMenu = QMenu("&File", self)
+        menuBar.addMenu(fileMenu)
+        self.setMenuBar(menuBar)
+        self.save_action = QtWidgets.QAction("Save", self)
+        self.save_action.triggered.connect(self.save_test)  # Connect the action's triggered signal to your save function
+        fileMenu.addAction(self.save_action)
+
+    def save_test(self):
+        print("SAVED!")
+        
     def on_reset_clicked(self):
         for i in range(self.square_grid_widget.grid_layout.count()):
             cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
@@ -139,6 +153,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     cell_widgets[i].setStyleSheet("border: 3px solid black; background-color: " + current_color + ";")
                     copies_exist = True
         if copies_exist == True:
+            #display error message for the address values.
+            msg = QMessageBox()
+            msg.setWindowTitle("ERROR")
+            msg.setText("Error: Two or more addresses in the grid are the same. The borders of the cells in the grids in question have been highlighted.")
+            x = msg.exec_()  # this will show our messagebox
             #Don't save anything to the file if there are any copies
             return
         for i in range(self.square_grid_widget.grid_layout.count()):
@@ -147,8 +166,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 if int(cell_widget.value) > -1: 
                     unchanged_color = cell_widgets[i].color
                     cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
+                    save_file.write("|| ")
                     save_file.write(str(cell_widget.value))
                     save_file.write(" ")
+                    save_file.write("(" + str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + ") ")
                     save_file.write(str(cell_widget.color))
                     save_file.write(" ")
 
