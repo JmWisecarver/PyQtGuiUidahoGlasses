@@ -12,6 +12,7 @@ class CellWidget(QtWidgets.QLabel):
         self.setStyleSheet("background-color: white;")  # Set the background color to white
         self.resize(35, 35)
         self.value = -1
+        self.color = "white"
         self.x_coord = 0
         self.y_coord = 0
         self.update_display()
@@ -21,6 +22,7 @@ class CellWidget(QtWidgets.QLabel):
         selected_color = self.parent().parent().parent().parent().parent().color_selection.currentText()
         if selected_color:  # Check if a color was selected
             self.setStyleSheet("background-color: " + selected_color + ";")  # Set the selected color
+            self.color = selected_color
         selected_value = self.parent().parent().parent().parent().parent().integer_input.text()  # Get the selected value from the input box
         self.value = selected_value  # Update the value
         self.update_display()
@@ -85,10 +87,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.side_layout.addWidget(self.integer_input)
         # Create a dropdown menu for color selection
         self.color_selection = QtWidgets.QComboBox(self.side_widget)
-        self.color_selection.addItem('#FFFFFF')  # Add white
-        self.color_selection.addItem('#FF0000')  # Add red
-        self.color_selection.addItem('#00FF00')  # Add green
-        self.color_selection.addItem('#0000FF')  # Add blue
+        self.color_selection.addItem('white')  # Add white #FFFFFF
+        self.color_selection.addItem('red')  # Add red #FF0000
+        self.color_selection.addItem('green')  # Add green #00FF00
+        self.color_selection.addItem('blue')  # Add blue #0000FF
         self.side_layout.addWidget(self.color_selection, 1)
 
         # Create a button to reset everything on the grid
@@ -114,11 +116,33 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_save_clicked(self):
         save_file = open("idahoGlassesSave.txt", "w")
+        values = []
+        cell_widgets = []
+        copies_exist = False
+
+        for i in range(self.square_grid_widget.grid_layout.count()):
+            cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
+            if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
+                values.append(cell_widget.value)
+                cell_widgets.append(cell_widget)
+        #Check for duplicates in the for loop
+        for i, value in enumerate(values):
+            if values.count(value) > 1:  # If the value appears more than once
+                if cell_widgets[i].value != -1:
+                    #Change all copies of the address value grid cells to have a black border to show where the copies are.
+                    current_color = cell_widgets[i].color
+                    cell_widgets[i].setStyleSheet("border: 3px solid black; background-color: " + current_color + ";")
+                    copies_exist = True
+        if copies_exist == True:
+            #Don't save anything to the file if there are any copies
+            return
         for i in range(self.square_grid_widget.grid_layout.count()):
             cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
             if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
                 if int(cell_widget.value) > -1: 
                     save_file.write(str(cell_widget.value))
+                    save_file.write(" ")
+                    save_file.write(str(cell_widget.color))
                     save_file.write(" ")
 
 

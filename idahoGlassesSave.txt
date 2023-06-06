@@ -1,1 +1,1 @@
-8 8 120 120 8 8 120 120 8 8 8 1 1 1 8 1 1 
+1 white 5 white 6 white 4 white 3 white 2 white 
