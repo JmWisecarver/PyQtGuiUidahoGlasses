@@ -81,10 +81,15 @@ class MainWindow(QtWidgets.QMainWindow):
         #Use Qvboxlayout so each new widget added to the side layout is added horizontally
         self.side_layout = QtWidgets.QVBoxLayout(self.side_widget)
         self.central_layout.addWidget(self.side_widget, 1)  # The side widget will take up 1 part of the window
+        
         # Create an input box for integer input
         self.integer_input = QtWidgets.QLineEdit(self.side_widget)
         #add it to the side layout
-        self.side_layout.addWidget(self.integer_input)
+        self.integer_label = QtWidgets.QLabel("Address:")
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        self.integer_label.setSizePolicy(size_policy)
+        self.side_layout.addWidget(self.integer_label, 1)
+        self.side_layout.addWidget(self.integer_input, 1)
         # Create a dropdown menu for color selection
         self.color_selection = QtWidgets.QComboBox(self.side_widget)
         self.color_selection.addItem('white')  # Add white #FFFFFF
@@ -140,6 +145,8 @@ class MainWindow(QtWidgets.QMainWindow):
             cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
             if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
                 if int(cell_widget.value) > -1: 
+                    unchanged_color = cell_widgets[i].color
+                    cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
                     save_file.write(str(cell_widget.value))
                     save_file.write(" ")
                     save_file.write(str(cell_widget.color))
