@@ -121,7 +121,7 @@ class MainWindow(QtWidgets.QMainWindow):
         menuBar.addMenu(fileMenu)
         self.setMenuBar(menuBar)
         self.save_action = QtWidgets.QAction("Save", self)
-        self.save_action.triggered.connect(self.save_file)  # Connect the action's triggered signal to your save function
+        self.save_action.triggered.connect(lambda: self.on_save_clicked(self.fileName))  # Connect the action's triggered signal to your save function
         if self.fileName == "UNK":
             self.save_action.setEnabled(False)
         self.save_as_action = QtWidgets.QAction("Save as...", self)
@@ -131,6 +131,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def save_file_as(self):
         print("SAVED AS!")
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self,"QFileDialog.getSaveFileName()", "", "All Files (*)", options=options)
+        file = open(file_name, 'w')
+        file.write('test')
+        file.close()
+        if file_name:
+            self.fileName = file_name
+            self.save_action.setEnabled(True)
+        return file_name
     def save_file(self):
         print("SAVED!")
         
