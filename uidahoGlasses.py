@@ -61,6 +61,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.fileName = "UNK"
+
         self.createMenuBar()
 
         self.central_widget = QtWidgets.QWidget(self)  # Create a new central widget
@@ -107,7 +109,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.button = QPushButton('save', self.side_widget)
         self.side_layout.addWidget(self.button, 1)
-        self.button.clicked.connect(self.on_save_clicked)
+        self.button.clicked.connect(lambda: self.on_save_clicked(self.fileName))
 
 
         #populate the square_grid we added earlier. This can be changed later based on how comfy the square sizes are.
@@ -119,10 +121,17 @@ class MainWindow(QtWidgets.QMainWindow):
         menuBar.addMenu(fileMenu)
         self.setMenuBar(menuBar)
         self.save_action = QtWidgets.QAction("Save", self)
-        self.save_action.triggered.connect(self.save_test)  # Connect the action's triggered signal to your save function
+        self.save_action.triggered.connect(self.save_file)  # Connect the action's triggered signal to your save function
+        if self.fileName == "UNK":
+            self.save_action.setEnabled(False)
+        self.save_as_action = QtWidgets.QAction("Save as...", self)
+        self.save_as_action.triggered.connect(self.save_file_as)  # Connect the action's triggered signal to your save function
         fileMenu.addAction(self.save_action)
+        fileMenu.addAction(self.save_as_action)
 
-    def save_test(self):
+    def save_file_as(self):
+        print("SAVED AS!")
+    def save_file(self):
         print("SAVED!")
         
     def on_reset_clicked(self):
@@ -133,8 +142,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 cell_widget.value = -1
                 cell_widget.update_display()
 
-    def on_save_clicked(self):
-        save_file = open("idahoGlassesSave.txt", "w")
+    def on_save_clicked(self, fileName):
+        save_file = open(fileName, "w")
         values = []
         cell_widgets = []
         copies_exist = False
