@@ -4,6 +4,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import sys
+import os
 
 class CellWidget(QtWidgets.QLabel):
     def __init__(self, parent=None):
@@ -24,15 +25,20 @@ class CellWidget(QtWidgets.QLabel):
             self.setStyleSheet("background-color: " + selected_color + ";")  # Set the selected color
             self.color = selected_color
         selected_value = self.parent().parent().parent().parent().parent().integer_input.text()  # Get the selected value from the input box
-        self.value = selected_value  # Update the value
-        self.update_display()
+        if selected_value:
+            self.value = int(selected_value)  # Update the value
+            self.update_display()
+        elif selected_value == "":
+            self.value = -2
+            self.update_display()
 
 
     def update_display(self):
-        if int(self.value) > -1:
-            self.setText(str(self.value))  # Display the value as a string
-        else:
-            self.setText("") # Show no address in the cell.
+        if self.value:
+            if int(self.value) > -1:
+                self.setText(str(self.value))  # Display the value as a string
+            else:
+                self.setText("") # Show no address in the cell.
 
 
 class SquareGridWidget(QtWidgets.QWidget):
@@ -62,6 +68,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
 
         self.fileName = "UNK"
+        self.fileStr = ""
 
         self.createMenuBar()
 
@@ -124,22 +131,72 @@ class MainWindow(QtWidgets.QMainWindow):
         self.save_action.triggered.connect(lambda: self.on_save_clicked(self.fileName))  # Connect the action's triggered signal to your save function
         if self.fileName == "UNK":
             self.save_action.setEnabled(False)
+        self.open_action = QtWidgets.QAction("Open", self)
+        self.open_action.triggered.connect(lambda: self.on_open_clicked())
         self.save_as_action = QtWidgets.QAction("Save as...", self)
         self.save_as_action.triggered.connect(self.save_file_as)  # Connect the action's triggered signal to your save function
+        fileMenu.addAction(self.open_action)
         fileMenu.addAction(self.save_action)
         fileMenu.addAction(self.save_as_action)
+
+    def on_open_clicked(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "", "All Files (*)", options=options)
+
+        if file_name:
+            with open(file_name, 'r') as file:
+                self.fileStr = file.read()
+                self.repopulate_grid(file_name)
+
+    def repopulate_grid(self, file_name):
+        print("re-Populating using " + file_name + "..\n")
+        self.on_reset_clicked()
+        cell_widget = self.square_grid_widget.grid_layout.itemAt(1).widget()
+        grid_data = self.fileStr.split("||")
+        for grid_information in grid_data:
+            if grid_information == "":
+                print("Nothing in file, failed to open.")
+                return
+            cell_data = grid_information.split("|")
+            for i, cell_information in enumerate(cell_data):
+                if str(cell_information[0]) == " END":
+                    return
+                #Using the enumeration we process each piece of data for the cell one at a time:
+                #Load the coordinates of the cell here
+                if i == 0:
+                    #the first bit of information is the coordinates so they are split by comma and then put onto variables
+                    coordinates = cell_information.split(",")
+                    if coordinates[0] == "END":
+                        return
+                    x = int(coordinates[0])
+                    y = int(coordinates[1])
+                    index = (y*30) + x
+                    cell_widget = self.square_grid_widget.grid_layout.itemAt(index).widget()
+                #Load the address of the cell here
+                elif i == 1:
+                    #print(cell_information)
+                    cell_widget.value = int(cell_information)
+                    #print(cell_information)
+                    cell_widget.update_display()
+                #Load the color of the cell here
+                elif i == 2:
+                    print(cell_information)
+                    cell_widget.color = cell_information
+                    cell_widget.setStyleSheet("background-color: " + cell_information + ";")
+
+                            
+
 
     def save_file_as(self):
         print("SAVED AS!")
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self,"QFileDialog.getSaveFileName()", "", "All Files (*)", options=options)
-        file = open(file_name, 'w')
-        file.write('test')
-        file.close()
         if file_name:
             self.fileName = file_name
             self.save_action.setEnabled(True)
+            self.on_save_clicked(file_name)
         return file_name
     def save_file(self):
         print("SAVED!")
@@ -153,7 +210,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 cell_widget.update_display()
 
     def on_save_clicked(self, fileName):
-        save_file = open(fileName, "w")
         values = []
         cell_widgets = []
         copies_exist = False
@@ -164,9 +220,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 values.append(cell_widget.value)
                 cell_widgets.append(cell_widget)
         #Check for duplicates in the for loop
+        print(values)
         for i, value in enumerate(values):
             if values.count(value) > 1:  # If the value appears more than once
-                if cell_widgets[i].value != -1:
+                if cell_widgets[i].value and int(cell_widgets[i].value) > -1:
                     #Change all copies of the address value grid cells to have a black border to show where the copies are.
                     current_color = cell_widgets[i].color
                     cell_widgets[i].setStyleSheet("border: 3px solid black; background-color: " + current_color + ";")
@@ -178,19 +235,22 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.setText("Error: Two or more addresses in the grid are the same. The borders of the cells in the grids in question have been highlighted.")
             x = msg.exec_()  # this will show our messagebox
             #Don't save anything to the file if there are any copies
+            copies_exist = False
             return
+        save_file = open(fileName, "w")
         for i in range(self.square_grid_widget.grid_layout.count()):
             cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
             if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
-                if int(cell_widget.value) > -1: 
+                if int(cell_widget.value) != -1: 
                     unchanged_color = cell_widgets[i].color
                     cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
-                    save_file.write("|| ")
+                    save_file.write(str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + "|")
                     save_file.write(str(cell_widget.value))
-                    save_file.write(" ")
-                    save_file.write("(" + str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + ") ")
+                    save_file.write("|")
                     save_file.write(str(cell_widget.color))
-                    save_file.write(" ")
+                    save_file.write("")
+                    save_file.write("||")
+        save_file.write("END")
 
 
 if __name__ == '__main__':
