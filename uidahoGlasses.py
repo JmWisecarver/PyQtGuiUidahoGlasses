@@ -147,6 +147,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if file_name:
             with open(file_name, 'r') as file:
                 self.fileStr = file.read()
+                self.fileName = file_name
+                self.save_action.setEnabled(True)
                 self.repopulate_grid(file_name)
 
     def repopulate_grid(self, file_name):
