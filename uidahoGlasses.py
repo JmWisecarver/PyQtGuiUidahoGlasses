@@ -21,6 +21,14 @@ class CellWidget(QtWidgets.QLabel):
 
     def mousePressEvent(self, event):
         selected_color = self.parent().parent().parent().parent().parent().color_selection.currentText()
+        eraser_status = self.parent().parent().parent().parent().parent().eraserToggle
+        print(eraser_status)
+        if eraser_status:   # If the eraser is enabled return clickedo n square to default
+            self.color = "white"
+            self.value = -1
+            self.setStyleSheet("background-color: " + "white" + ";")
+            self.update_display()
+            return
         if selected_color:  # Check if a color was selected
             self.setStyleSheet("background-color: " + selected_color + ";")  # Set the selected color
             self.color = selected_color
@@ -31,6 +39,7 @@ class CellWidget(QtWidgets.QLabel):
         elif selected_value == "":
             self.value = -2
             self.update_display()
+
 
 
     def update_display(self):
@@ -109,11 +118,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.color_selection.addItem('blue')  # Add blue #0000FF
         self.side_layout.addWidget(self.color_selection, 1)
 
+        # Create a button to toggle eraser for grid spaces
+        self.eraserToggle = False
+        self.eraser_button = QPushButton('eraser', self.side_widget)
+        self.eraser_button.setCheckable(True)
+        self.side_layout.addWidget(self.eraser_button, 1)
+        self.eraser_button.clicked.connect(lambda: self.on_eraser_clicked(self.eraserToggle))
+        
+
         # Create a button to reset everything on the grid
         self.button = QPushButton('reset', self.side_widget)
         self.side_layout.addWidget(self.button, 1)
         self.button.clicked.connect(self.on_reset_clicked)
-
+        # Create a button to save (not save as) everything on the grid
         self.button = QPushButton('save', self.side_widget)
         self.side_layout.addWidget(self.button, 1)
         self.button.clicked.connect(lambda: self.on_save_clicked(self.fileName))
@@ -253,6 +270,20 @@ class MainWindow(QtWidgets.QMainWindow):
                     save_file.write("")
                     save_file.write("||")
         save_file.write("END")
+
+    # Eraser button is used as a toggle to erase cell spaces
+    def on_eraser_clicked(self, eraserToggle):
+        if(self.eraser_button.isChecked == True):
+            self.eraser_button.isChecked = False
+            self.eraserToggle = False
+            print("Not Checked") 
+            self.eraser_button.setStyleSheet("")    # Entering nothing gives the default colors
+        else:
+            self.eraserToggle = True
+            self.eraser_button.isChecked = True
+            print("Checked")
+            self.eraser_button.setStyleSheet("background-color : red")  # Turns the button red when it is in use
+        
 
 
 if __name__ == '__main__':
