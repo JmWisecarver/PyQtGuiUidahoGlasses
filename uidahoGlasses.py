@@ -172,10 +172,20 @@ class MainWindow(QtWidgets.QMainWindow):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         file_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "", "All Files (*)", options=options)
-
+        print(file_name)
         if file_name:
             with open(file_name, 'r') as file:
                 self.fileStr = file.read()
+                self.frame_selection.clear()
+                temp_file = open('TEMP', 'w')
+
+                for i in range(0, len(self.fileStr)): 
+                    temp_file.write(self.fileStr[i])
+                #add the correct number of patterns depending on '#' found
+                self.frame_selection.addItem('PATTERN 1')
+                for i in range(0, len(self.fileStr)):
+                    if self.fileStr[i] == '#':
+                        self.frame_selection.addItem('PATTERN ' + str(self.frame_selection.count() + 1))
                 self.fileName = file_name
                 self.save_action.setEnabled(True)
                 self.repopulate_grid(file_name, 0)
@@ -197,6 +207,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 try: cell_information
                 except NameError:
                     return
+                if cell_information[0] == "#":
+                    return
                 if cell_information[0] == "":
                     return
                 if str(cell_information[0]) == " END":
@@ -210,6 +222,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     if coordinates[0] == "END":
                         return
                     if coordinates[0] == "":
+                        return
+                    if coordinates[0] == "#":
                         return
                     x = int(coordinates[0])
                     y = int(coordinates[1])
@@ -252,46 +266,17 @@ class MainWindow(QtWidgets.QMainWindow):
                 cell_widget.update_display()
 
     def on_save_clicked(self, fileName):
-        values = []
-        cell_widgets = []
-        copies_exist = False
+        with open('TEMP','r') as read_file, open(fileName,'w') as write_file: 
+      
+            # read content from first file 
+            for line in read_file: 
+               
+                # write content to second file 
+                write_file.write(line)
 
-        for i in range(self.square_grid_widget.grid_layout.count()):
-            cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
-            if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
-                values.append(cell_widget.value)
-                cell_widgets.append(cell_widget)
-        #Check for duplicates in the for loop
-        for i, value in enumerate(values):
-            if values.count(value) > 1:  # If the value appears more than once
-                if cell_widgets[i].value and int(cell_widgets[i].value) > -1:
-                    #Change all copies of the address value grid cells to have a black border to show where the copies are.
-                    current_color = cell_widgets[i].color
-                    cell_widgets[i].setStyleSheet("border: 3px solid black; background-color: " + current_color + ";")
-                    copies_exist = True
-        if copies_exist == True:
-            #display error message for the address values.
-            msg = QMessageBox()
-            msg.setWindowTitle("ERROR")
-            msg.setText("Error: Two or more addresses in the grid are the same. The borders of the cells in the grids in question have been highlighted.")
-            x = msg.exec_()  # this will show our messagebox
-            #Don't save anything to the file if there are any copies
-            copies_exist = False
-            return
-        save_file = open(fileName, "w")
-        for i in range(self.square_grid_widget.grid_layout.count()):
-            cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
-            if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
-                if int(cell_widget.value) != -1: 
-                    unchanged_color = cell_widgets[i].color
-                    cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
-                    save_file.write(str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + "|")
-                    save_file.write(str(cell_widget.value))
-                    save_file.write("|")
-                    save_file.write(str(cell_widget.color))
-                    save_file.write("")
-                    save_file.write("||")
-        save_file.write("END")
+            read_file.close()
+            write_file.close()
+
 
     # Eraser button is used as a toggle to erase cell spaces
     def on_eraser_clicked(self, eraserToggle):
@@ -453,5 +438,7 @@ if __name__ == '__main__':
 
     main_win = MainWindow()
     main_win.show()
+    open("TEMP", 'w').close()
+
 
     app.exec_()
