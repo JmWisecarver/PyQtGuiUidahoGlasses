@@ -101,13 +101,20 @@ class MainWindow(QtWidgets.QMainWindow):
         #Use Qvboxlayout so each new widget added to the side layout is added horizontally
         self.side_layout = QtWidgets.QVBoxLayout(self.side_widget)
         self.central_layout.addWidget(self.side_widget, 1)  # The side widget will take up 1 part of the window
-        # Create a button to add a pettern frame
+        # Create a button to add a pattern frame
         self.pattern_button = QPushButton('add pattern', self.side_widget)
         self.side_layout.addWidget(self.pattern_button, 1)
         self.pattern_button.clicked.connect(lambda: self.on_pattern_clicked())
+        # Create a button to save a pattern to the current frame
+        self.save_pattern_button = QPushButton('save pattern', self.side_widget)
+        self.side_layout.addWidget(self.save_pattern_button, 1)
+        #************************************************************LEFT OFF HERE********************************************#
+        # Make the save button so that you can overwrite saves
+        self.save_pattern_button.clicked.connect(lambda: self.on_pattern_saved(self.frame_selection.currentIndex()))
         # Create a dropdown menu for pattern frame
         self.frame_selection = QtWidgets.QComboBox(self.side_widget)
         self.frame_selection.activated.connect(self.on_frame_clicked)
+        self.frame_selection.addItem('PATTERN 1')
         # Create an input box for integer input
         self.integer_input = QtWidgets.QLineEdit(self.side_widget)
         #add it to the side layout
@@ -310,10 +317,38 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.repopulate_grid("TEMP", index)
 
 
-
-
-    # Hold all patterns in a temporary file for proper saving and navigation between patterns
-    def on_pattern_clicked(self):
+    def on_pattern_saved(self, index):
+        print("PATTERN SAVE CLICKED")
+        #step 1: get the current temp file characters into a list: temp_list
+        with open("TEMP", 'r') as file:
+                self.fileStr = file.read()
+                print(self.fileStr + " " + str(index))
+        #step 2: find the information that is going to be removed and save everything else to two variables temp_list_left, and temp_list_right
+                number_found = 0
+                removal_position = 0
+                temp_list_left = ""
+                temp_list_right = "" 
+                if index != 0:
+                    for i in range(0, len(self.fileStr)):
+                        if self.fileStr[i] == '#':
+                            number_found = number_found + 1
+                            if index == number_found:
+                                removal_position = i
+                print(removal_position)
+                if index != 0:
+                    for i in range(0, removal_position):
+                        temp_list_left += self.fileStr[i]
+                found_end = False
+                for i in range(removal_position, len(self.fileStr)):
+                    if self.fileStr[i] == '#' and i != removal_position:
+                        found_end = True
+                    if found_end == True and i < len(self.fileStr):
+                        temp_list_right += self.fileStr[i]
+                final_list = ""
+                final_list = final_list + temp_list_left + temp_list_right
+                print("BEFORE\n" + self.fileStr + "\nBEFORE")
+                print("AFTER\n" + final_list + "\nAFTER")
+        #step 3: get the new information that is going to be saved to the list
         values = []
         cell_widgets = []
         copies_exist = False
@@ -341,10 +376,58 @@ class MainWindow(QtWidgets.QMainWindow):
             copies_exist = False
             return
         total = self.frame_selection.count()
-        if total == 0:
+        temp_insert = ""
+        if index != 0:
+            temp_insert = "#"
+        for i in range(self.square_grid_widget.grid_layout.count()):
+            cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
+            if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
+                if int(cell_widget.value) != -1: 
+                    unchanged_color = cell_widgets[i].color
+                    cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
+                    temp_insert = temp_insert + str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + "|" + str(cell_widget.value) + "|" + str(cell_widget.color) + "||"
+        print(temp_insert)
+        #step 4: make a new variable and save it to the new string like this new_temp_file = temp_list_left + new_string + temp_list_right
+        new_temp_file = temp_list_left + temp_insert + temp_list_right
+        #step 5: save this new string to TEMP
+        save_file = open("TEMP", "w")
+        save_file.write(new_temp_file)
+
+    # Hold all patterns in a temporary file for proper saving and navigation between patterns
+    def on_pattern_clicked(self):
+        values = []
+        cell_widgets = []
+        copies_exist = False
+        """""
+        for i in range(self.square_grid_widget.grid_layout.count()):
+            cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
+            if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
+                values.append(cell_widget.value)
+                cell_widgets.append(cell_widget)
+        #Check for duplicates in the for loop
+        for i, value in enumerate(values):
+            if values.count(value) > 1:  # If the value appears more than once
+                if cell_widgets[i].value and int(cell_widgets[i].value) > -1:
+                    #Change all copies of the address value grid cells to have a black border to show where the copies are.
+                    current_color = cell_widgets[i].color
+                    cell_widgets[i].setStyleSheet("border: 3px solid black; background-color: " + current_color + ";")
+                    copies_exist = True
+        if copies_exist == True:
+            #display error message for the address values.
+            msg = QMessageBox()
+            msg.setWindowTitle("ERROR")
+            msg.setText("Error: Two or more addresses in the grid are the same. The borders of the cells in the grids in question have been highlighted.")
+            x = msg.exec_()  # this will show our messagebox
+            #Don't save anything to the file if there are any copies
+            copies_exist = False
+            return
+        total = self.frame_selection.count()
+        """
+        if self.frame_selection.count() == 0:
             save_file = open("TEMP", "w")
         else:
             save_file = open("TEMP", "a+")
+        """""
         for i in range(self.square_grid_widget.grid_layout.count()):
             cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
             if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
@@ -357,7 +440,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     save_file.write(str(cell_widget.color))
                     save_file.write("")
                     save_file.write("||")
-        self.frame_selection.addItem('PATTERN ' + str(total + 1))
+        """
+        self.frame_selection.addItem('PATTERN ' + str(self.frame_selection.count() + 1))
         save_file.write("#")
         
         
