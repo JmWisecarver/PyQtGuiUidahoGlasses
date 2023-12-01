@@ -178,9 +178,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.open_action.triggered.connect(lambda: self.on_open_clicked())
         self.save_as_action = QtWidgets.QAction("Save as...", self)
         self.save_as_action.triggered.connect(self.save_file_as)  # Connect the action's triggered signal to your save function
+        self.convert_save_to_ht13_action = QtWidgets.QAction("Convert to ht13", self)
+        self.convert_save_to_ht13_action.triggered.connect(lambda: self.on_convert_clicked())
         fileMenu.addAction(self.open_action)
         fileMenu.addAction(self.save_action)
         fileMenu.addAction(self.save_as_action)
+        fileMenu.addAction(self.convert_save_to_ht13_action)
 
     def on_open_clicked(self):
         options = QtWidgets.QFileDialog.Options()
@@ -415,7 +418,34 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_delete_pattern_clicked(self):
         print(self.time_input.text())
-        
+
+    def on_convert_clicked(self):
+        print("???")
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "", "All Files (*)", options=options)
+        initial_file = open(file_name, "r")
+        converted_file = open(file_name + "_ht13", "w")
+        # Step 1 pull all information needed from the initial file (exclude coordinates)
+        initial_text = initial_file.read()
+        # Using a boolean to toggle what text is being added or not
+        skip_text = True
+        post_text = ""
+        i = 0
+        while i < len(initial_text):
+            if skip_text == False:
+                post_text += initial_text[i]
+            if initial_text[i] == "|":
+                if initial_text[i+1] != "|":
+                    skip_text = False
+            if initial_text[i] == "|" and initial_text[i+1] == "|" and initial_text[i+2] != "(":
+                skip_text = True
+                i = i+1
+            if initial_text[i] == "#":
+                skip_text = True
+            i = i + 1
+        print(post_text)
+        converted_file.write(post_text)
     
 
 if __name__ == '__main__':
