@@ -105,10 +105,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pattern_button = QPushButton('add pattern', self.side_widget)
         self.side_layout.addWidget(self.pattern_button, 1)
         self.pattern_button.clicked.connect(lambda: self.on_pattern_clicked())
+        # Create a button to delete a pattern frame
+        self.delete_pattern_button = QPushButton('remove pattern', self.side_widget)
+        self.side_layout.addWidget(self.delete_pattern_button, 1)
+        self.delete_pattern_button.clicked.connect(lambda: self.on_delete_pattern_clicked())
         # Create a button to save a pattern to the current frame
         self.save_pattern_button = QPushButton('save pattern', self.side_widget)
         self.side_layout.addWidget(self.save_pattern_button, 1)
-        #************************************************************LEFT OFF HERE********************************************#
         # Make the save button so that you can overwrite saves
         self.save_pattern_button.clicked.connect(lambda: self.on_pattern_saved(self.frame_selection.currentIndex()))
         # Create a dropdown menu for pattern frame
@@ -123,6 +126,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.integer_label.setSizePolicy(size_policy)
         self.side_layout.addWidget(self.integer_label, 1)
         self.side_layout.addWidget(self.integer_input, 1)
+
+        self.time_input = QtWidgets.QLineEdit(self.side_widget)
+        #add it to the side layout
+        self.time_label = QtWidgets.QLabel("Time(seconds):")
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        self.time_label.setSizePolicy(size_policy)
+        self.side_layout.addWidget(self.time_label, 1)
+        self.side_layout.addWidget(self.time_input, 1)
+
+
+        
         # Create a dropdown menu for color selection
         self.color_selection = QtWidgets.QComboBox(self.side_widget)
         self.color_selection.addItem('white')  # Add white #FFFFFF
@@ -194,10 +208,11 @@ class MainWindow(QtWidgets.QMainWindow):
         print("re-Populating using " + file_name + "..\n")
         self.on_reset_clicked()
         cell_widget = self.square_grid_widget.grid_layout.itemAt(1).widget()
+        #find the time value
+        #for i in range(0,)
         frame_data = self.fileStr.split("#")
         grid_data = frame_data[index].split("||")
         for grid_information in grid_data:
-            print("HERE\n" + grid_information + "\nHERE")
             if grid_information == "":
                 print("Nothing in file, failed to open.")
                 return
@@ -210,6 +225,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 if cell_information[0] == "#":
                     return
                 if cell_information[0] == "":
+                    return
+                if cell_information[0] == "(":
+                    time_value = ""
+                    for i in range(1, len(cell_information)):
+                        if cell_information[i] != ")":
+                            time_value += cell_information[i]
+                    print(time_value)
+                    self.time_input.setText(time_value)
                     return
                 if str(cell_information[0]) == " END":
                     return
@@ -224,6 +247,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     if coordinates[0] == "":
                         return
                     if coordinates[0] == "#":
+                        return
+                    if coordinates[0][0] == "(":
                         return
                     x = int(coordinates[0])
                     y = int(coordinates[1])
@@ -371,6 +396,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     unchanged_color = cell_widgets[i].color
                     cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
                     temp_insert = temp_insert + str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + "|" + str(cell_widget.value) + "|" + str(cell_widget.color) + "||"
+        temp_insert = temp_insert + "(" + self.time_input.text() + ")"
         print(temp_insert)
         #step 4: make a new variable and save it to the new string like this new_temp_file = temp_list_left + new_string + temp_list_right
         new_temp_file = temp_list_left + temp_insert + temp_list_right
@@ -380,58 +406,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Hold all patterns in a temporary file for proper saving and navigation between patterns
     def on_pattern_clicked(self):
-        values = []
-        cell_widgets = []
-        copies_exist = False
-        """""
-        for i in range(self.square_grid_widget.grid_layout.count()):
-            cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
-            if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
-                values.append(cell_widget.value)
-                cell_widgets.append(cell_widget)
-        #Check for duplicates in the for loop
-        for i, value in enumerate(values):
-            if values.count(value) > 1:  # If the value appears more than once
-                if cell_widgets[i].value and int(cell_widgets[i].value) > -1:
-                    #Change all copies of the address value grid cells to have a black border to show where the copies are.
-                    current_color = cell_widgets[i].color
-                    cell_widgets[i].setStyleSheet("border: 3px solid black; background-color: " + current_color + ";")
-                    copies_exist = True
-        if copies_exist == True:
-            #display error message for the address values.
-            msg = QMessageBox()
-            msg.setWindowTitle("ERROR")
-            msg.setText("Error: Two or more addresses in the grid are the same. The borders of the cells in the grids in question have been highlighted.")
-            x = msg.exec_()  # this will show our messagebox
-            #Don't save anything to the file if there are any copies
-            copies_exist = False
-            return
-        total = self.frame_selection.count()
-        """
         if self.frame_selection.count() == 0:
             save_file = open("TEMP", "w")
         else:
             save_file = open("TEMP", "a+")
-        """""
-        for i in range(self.square_grid_widget.grid_layout.count()):
-            cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
-            if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
-                if int(cell_widget.value) != -1: 
-                    unchanged_color = cell_widgets[i].color
-                    cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
-                    save_file.write(str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + "|")
-                    save_file.write(str(cell_widget.value))
-                    save_file.write("|")
-                    save_file.write(str(cell_widget.color))
-                    save_file.write("")
-                    save_file.write("||")
-        """
         self.frame_selection.addItem('PATTERN ' + str(self.frame_selection.count() + 1))
         save_file.write("#")
-        
-        
-        
 
+    def on_delete_pattern_clicked(self):
+        print(self.time_input.text())
+        
+    
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
