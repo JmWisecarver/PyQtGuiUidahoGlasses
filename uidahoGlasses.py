@@ -420,12 +420,11 @@ class MainWindow(QtWidgets.QMainWindow):
         print(self.time_input.text())
 
     def on_convert_clicked(self):
-        print("???")
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         file_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "", "All Files (*)", options=options)
         initial_file = open(file_name, "r")
-        converted_file = open(file_name + "_ht13", "w")
+        converted_file = open(file_name + ".ht13", "w")
         # Step 1 pull all information needed from the initial file (exclude coordinates)
         initial_text = initial_file.read()
         # Using a boolean to toggle what text is being added or not
