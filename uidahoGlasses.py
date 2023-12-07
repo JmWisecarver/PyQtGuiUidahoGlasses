@@ -16,11 +16,17 @@ class CellWidget(QtWidgets.QLabel):
         self.color = "white"
         self.x_coord = 0
         self.y_coord = 0
+        self.r = 255
+        self.b = 255
+        self.g = 255
         self.update_display()
         self.setAlignment(QtCore.Qt.AlignCenter)
 
     def mousePressEvent(self, event):
         selected_color = self.parent().parent().parent().parent().parent().color_selection.currentText()
+        selected_color_red = self.parent().parent().parent().parent().parent().red_input.text()
+        selected_color_green = self.parent().parent().parent().parent().parent().green_input.text()
+        selected_color_blue = self.parent().parent().parent().parent().parent().blue_input.text()
         eraser_status = self.parent().parent().parent().parent().parent().eraserToggle
         print(eraser_status)
         if eraser_status:   # If the eraser is enabled return clickedo n square to default
@@ -29,9 +35,11 @@ class CellWidget(QtWidgets.QLabel):
             self.setStyleSheet("background-color: " + "white" + ";")
             self.update_display()
             return
-        if selected_color:  # Check if a color was selected
-            self.setStyleSheet("background-color: " + selected_color + ";")  # Set the selected color
-            self.color = selected_color
+        self.r = selected_color_red
+        self.g = selected_color_green
+        self.b = selected_color_blue
+        self.setStyleSheet("background-color:rgb(" + selected_color_red + "," + selected_color_green + "," + selected_color_blue + ")" + ";")  # Set the selected color
+        self.color = selected_color
         selected_value = self.parent().parent().parent().parent().parent().integer_input.text()  # Get the selected value from the input box
         if selected_value:
             self.value = int(selected_value)  # Update the value
@@ -134,6 +142,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.time_label.setSizePolicy(size_policy)
         self.side_layout.addWidget(self.time_label, 1)
         self.side_layout.addWidget(self.time_input, 1)
+
+        self.red_input = QtWidgets.QLineEdit(self.side_widget)
+        self.green_input = QtWidgets.QLineEdit(self.side_widget)
+        self.blue_input = QtWidgets.QLineEdit(self.side_widget)
+        self.red_label = QtWidgets.QLabel("Red:")
+        self.green_label = QtWidgets.QLabel("Green")
+        self.blue_label = QtWidgets.QLabel("Blue")
+        self.side_layout.addWidget(self.red_label)
+        self.side_layout.addWidget(self.red_input)
+        self.side_layout.addWidget(self.green_label)
+        self.side_layout.addWidget(self.green_input)
+        self.side_layout.addWidget(self.blue_label)
+        self.side_layout.addWidget(self.blue_input)
+        self.red_input.setText("0")
+        self.green_input.setText("0")
+        self.blue_input.setText("0")
+        self.red_input.setFixedWidth(40)
+        self.green_input.setFixedWidth(40)
+        self.blue_input.setFixedWidth(40)
+    
 
 
         
@@ -265,9 +293,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     cell_widget.update_display()
                 #Load the color of the cell here
                 elif i == 2:
-                    print(cell_information)
-                    cell_widget.color = cell_information
-                    cell_widget.setStyleSheet("background-color: " + cell_information + ";")
+                    print("CELL INFO HERE: ", cell_information)
+                    colors = cell_information.split("[")
+                    #cell_widget.color = cell_information
+                    cell_widget.r = colors[0]
+                    cell_widget.g = colors[1]
+                    cell_widget.b = colors[2]
+                    cell_widget.setStyleSheet("background-color:rgb(" + cell_widget.r + "," + cell_widget.g + "," + cell_widget.b + ");")
+                    print("WAT")
 
                             
 
@@ -397,8 +430,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
                 if int(cell_widget.value) != -1: 
                     unchanged_color = cell_widgets[i].color
-                    cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
-                    temp_insert = temp_insert + str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + "|" + str(cell_widget.value) + "|" + str(cell_widget.color) + "||"
+                    #cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
+                    temp_insert = temp_insert + str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + "|" + str(cell_widget.value) + "|" + cell_widget.r + "[" + cell_widget.g + "[" +  cell_widget.b + "||"
         temp_insert = temp_insert + "(" + self.time_input.text() + ")"
         print(temp_insert)
         #step 4: make a new variable and save it to the new string like this new_temp_file = temp_list_left + new_string + temp_list_right
