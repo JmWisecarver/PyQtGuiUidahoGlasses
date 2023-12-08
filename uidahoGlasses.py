@@ -476,6 +476,9 @@ class MainWindow(QtWidgets.QMainWindow):
             if initial_text[i] == "#":
                 skip_text = True
             i = i + 1
+        bind = QtWidgets.QInputDialog.getText(self, 'Input Dialog', 'Enter keybind:') 
+        print(bind)
+        post_text += bind[0]
         print(post_text)
         converted_file.write(post_text)
     
