@@ -22,7 +22,22 @@ class CellWidget(QtWidgets.QLabel):
         self.update_display()
         self.setAlignment(QtCore.Qt.AlignCenter)
 
+        self.selected = False
+        self.count = 0
+        self.label = QtWidgets.QLabel(self)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("color: white;") 
+
     def mousePressEvent(self, event):
+
+        #Added a counter for counting squares.
+        if not self.selected:
+            self.count = self.parent().get_next_square_number()
+            self.label.setText(str(self.count))
+            self.selected = True
+            self.setStyleSheet("background-color: black; border: 2px solid white;")
+            
+
         selected_color = self.parent().parent().parent().parent().parent().color_selection.currentText()
         selected_color_red = self.parent().parent().parent().parent().parent().red_input.text()
         selected_color_green = self.parent().parent().parent().parent().parent().green_input.text()
@@ -58,6 +73,8 @@ class CellWidget(QtWidgets.QLabel):
                 self.setText("") # Show no address in the cell.
 
 
+
+    
 class SquareGridWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -66,7 +83,7 @@ class SquareGridWidget(QtWidgets.QWidget):
         size = min(self.width(), self.height())
         self.resize(size, size)
         self.setStyleSheet("background-color: black;")  # Set the background color of the main window
-        
+        self.square_number = 0
 
     def populate_grid(self, row_count, column_count, cell_size=50, spacing=1):
         for i in range(row_count):
@@ -80,6 +97,11 @@ class SquareGridWidget(QtWidgets.QWidget):
         #This fixedsize may not be useful later thanks to the scroll area, I may just force the grid to always have an equal number of rows and columns
         self.setFixedSize(cell_size * column_count + spacing * (column_count - 1), cell_size * row_count + spacing * (row_count - 1))
 
+    #added this to increment square_number/counter
+    def get_next_square_number(self):
+        self.square_number += 1
+        return self.square_number
+        
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
