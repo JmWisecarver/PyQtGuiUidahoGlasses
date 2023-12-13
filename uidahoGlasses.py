@@ -30,14 +30,6 @@ class CellWidget(QtWidgets.QLabel):
 
     def mousePressEvent(self, event):
 
-        #Added a counter for counting squares.
-        if not self.selected:
-            self.count = self.parent().get_next_square_number()
-            self.label.setText(str(self.count))
-            self.selected = True
-            self.setStyleSheet("background-color: black; border: 2px solid white;")
-            
-
         selected_color = self.parent().parent().parent().parent().parent().color_selection.currentText()
         selected_color_red = self.parent().parent().parent().parent().parent().red_input.text()
         selected_color_green = self.parent().parent().parent().parent().parent().green_input.text()
@@ -58,10 +50,15 @@ class CellWidget(QtWidgets.QLabel):
         selected_value = self.parent().parent().parent().parent().parent().integer_input.text()  # Get the selected value from the input box
         if selected_value:
             self.value = int(selected_value)  # Update the value
+            if self.parent().parent().parent().parent().parent().increment.isChecked() == True:
+                self.parent().parent().parent().parent().parent().integer_input.setText(str(self.value+1))
             self.update_display()
         elif selected_value == "":
+            #set the address to a value of -2 to denote it is not set
             self.value = -2
             self.update_display()
+        #if the toggle is on that increments the address then increment automatically.
+        
 
 
 
@@ -106,6 +103,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.toggle_increment = False
         self.fileName = "UNK"
         self.fileStr = ""
 
@@ -156,10 +154,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.integer_label.setSizePolicy(size_policy)
         self.side_layout.addWidget(self.integer_label, 1)
         self.side_layout.addWidget(self.integer_input, 1)
+        # Checkbox with a text label
+        self.increment = QCheckBox(text="Auto Increment")
+        # Add to the side area
+        self.side_layout.addWidget(self.increment)
 
         self.time_input = QtWidgets.QLineEdit(self.side_widget)
         #add it to the side layout
-        self.time_label = QtWidgets.QLabel("Time(seconds):")
+        self.time_label = QtWidgets.QLabel("Time(milliseconds):")
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         self.time_label.setSizePolicy(size_policy)
         self.side_layout.addWidget(self.time_label, 1)
@@ -430,9 +432,8 @@ class MainWindow(QtWidgets.QMainWindow):
         for i, value in enumerate(values):
             if values.count(value) > 1:  # If the value appears more than once
                 if cell_widgets[i].value and int(cell_widgets[i].value) > -1:
-                    #Change all copies of the address value grid cells to have a black border to show where the copies are.
-                    current_color = cell_widgets[i].color
-                    cell_widgets[i].setStyleSheet("border: 3px solid black; background-color: " + current_color + ";")
+                    #Changed this to highlightcell_widgets[i].setStyleSheet("background-color:rgb(" + str(cell_widgets[i].r) + "," + str(cell_widgets[i].g) + "," + str(cell_widgets[i].b) + ");")
+                    cell_widgets[i].setStyleSheet("border: 3px solid black; background-color:rgb(" + str(cell_widgets[i].r) + "," + str(cell_widgets[i].g) + "," + str(cell_widgets[i].b) + ");")
                     copies_exist = True
         if copies_exist == True:
             #display error message for the address values.
