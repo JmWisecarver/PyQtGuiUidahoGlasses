@@ -63,7 +63,7 @@ class CellWidget(QtWidgets.QLabel):
 
 
     def update_display(self):
-        if self.value:
+        if int(self.value) > -1:
             if int(self.value) > -1:
                 self.setText(str(self.value))  # Display the value as a string
             else:
@@ -423,7 +423,7 @@ class MainWindow(QtWidgets.QMainWindow):
         cell_widgets = []
         copies_exist = False
 
-        for i in range(self.square_grid_widget.grid_layout.count()):
+        for i in range(0, self.square_grid_widget.grid_layout.count()):
             cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
             if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
                 values.append(cell_widget.value)
@@ -431,7 +431,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #Check for duplicates in the for loop
         for i, value in enumerate(values):
             if values.count(value) > 1:  # If the value appears more than once
-                if cell_widgets[i].value and int(cell_widgets[i].value) > -1:
+                if (cell_widgets[i].value > -1) and int(cell_widgets[i].value) > -1:
                     #Changed this to highlightcell_widgets[i].setStyleSheet("background-color:rgb(" + str(cell_widgets[i].r) + "," + str(cell_widgets[i].g) + "," + str(cell_widgets[i].b) + ");")
                     cell_widgets[i].setStyleSheet("border: 3px solid black; background-color:rgb(" + str(cell_widgets[i].r) + "," + str(cell_widgets[i].g) + "," + str(cell_widgets[i].b) + ");")
                     copies_exist = True
@@ -454,6 +454,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if int(cell_widget.value) != -1: 
                     unchanged_color = cell_widgets[i].color
                     #cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
+                    cell_widget.setStyleSheet("border: 1px white; background-color:rgb(" + cell_widget.r + "," + cell_widget.g + "," + cell_widget.b + ");")
                     temp_insert = temp_insert + str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + "|" + str(cell_widget.value) + "|" + cell_widget.r + "[" + cell_widget.g + "[" +  cell_widget.b + "||"
         temp_insert = temp_insert + "(" + self.time_input.text() + ")"
         print(temp_insert)
@@ -473,7 +474,9 @@ class MainWindow(QtWidgets.QMainWindow):
         save_file.write("#")
 
     def on_delete_pattern_clicked(self):
-        print(self.time_input.text())
+        pattern_to_delete = self.frame_selection.currentIndex()
+        print("Deleting: " + str(pattern_to_delete) + "\n")
+
 
     def on_convert_clicked(self):
         options = QtWidgets.QFileDialog.Options()
