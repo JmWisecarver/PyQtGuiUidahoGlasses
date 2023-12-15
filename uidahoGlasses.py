@@ -36,7 +36,7 @@ class CellWidget(QtWidgets.QLabel):
         selected_color_blue = self.parent().parent().parent().parent().parent().blue_input.text()
         eraser_status = self.parent().parent().parent().parent().parent().eraserToggle
         print(eraser_status)
-        if eraser_status:   # If the eraser is enabled return clickedo n square to default
+        if eraser_status == True:   # If the eraser is enabled return clicked on square to default
             self.color = "white"
             self.value = -1
             self.setStyleSheet("background-color: " + "white" + ";")
@@ -55,7 +55,7 @@ class CellWidget(QtWidgets.QLabel):
             self.update_display()
         elif selected_value == "":
             #set the address to a value of -2 to denote it is not set
-            self.value = -2
+            self.value = -1
             self.update_display()
         #if the toggle is on that increments the address then increment automatically.
         
@@ -64,10 +64,9 @@ class CellWidget(QtWidgets.QLabel):
 
     def update_display(self):
         if int(self.value) > -1:
-            if int(self.value) > -1:
-                self.setText(str(self.value))  # Display the value as a string
-            else:
-                self.setText("") # Show no address in the cell.
+            self.setText(str(self.value))  # Display the value as a string
+        else:
+            self.setText("") # Show no address in the cell.
 
 
 
@@ -431,7 +430,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #Check for duplicates in the for loop
         for i, value in enumerate(values):
             if values.count(value) > 1:  # If the value appears more than once
-                if (cell_widgets[i].value > -1) and int(cell_widgets[i].value) > -1:
+                if int(cell_widgets[i].value) > -1:
                     #Changed this to highlightcell_widgets[i].setStyleSheet("background-color:rgb(" + str(cell_widgets[i].r) + "," + str(cell_widgets[i].g) + "," + str(cell_widgets[i].b) + ");")
                     cell_widgets[i].setStyleSheet("border: 3px solid black; background-color:rgb(" + str(cell_widgets[i].r) + "," + str(cell_widgets[i].g) + "," + str(cell_widgets[i].b) + ");")
                     copies_exist = True
