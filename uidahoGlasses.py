@@ -385,9 +385,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.save_action.setEnabled(True)
                 self.repopulate_grid("TEMP", index)
 
-
-    def on_pattern_saved(self, index):
-        print("PATTERN SAVE CLICKED")
+    #Used to get a string that does not include a pattern
+    def remove_pattern(self, index):
+        temp_list_left = "" 
+        temp_list_right = "" 
+        final_list = ""
         #step 1: get the current temp file characters into a list: temp_list
         with open("TEMP", 'r') as file:
                 self.fileStr = file.read()
@@ -395,8 +397,6 @@ class MainWindow(QtWidgets.QMainWindow):
         #step 2: find the information that is going to be removed and save everything else to two variables temp_list_left, and temp_list_right
                 number_found = 0
                 removal_position = 0
-                temp_list_left = ""
-                temp_list_right = "" 
                 if index != 0:
                     for i in range(0, len(self.fileStr)):
                         if self.fileStr[i] == '#':
@@ -413,11 +413,22 @@ class MainWindow(QtWidgets.QMainWindow):
                         found_end = True
                     if found_end == True and i < len(self.fileStr):
                         temp_list_right += self.fileStr[i]
-                final_list = ""
                 final_list = final_list + temp_list_left + temp_list_right
                 print("BEFORE\n" + self.fileStr + "\nBEFORE")
                 print("AFTER\n" + final_list + "\nAFTER")
-        #step 3: get the new information that is going to be saved to the list
+        #Return the variables that will allow you to add or replace or do something else
+        return temp_list_left, temp_list_right, final_list
+
+
+    def on_pattern_saved(self, index):
+        print("PATTERN SAVE CLICKED")
+        temp_list_left = ""
+        temp_list_right = ""
+        final_list = ""
+        temp_list_left, temp_list_right, final_list = self.remove_pattern(index)
+        print("AFTER\n" + final_list + "\nAFTER")
+        #step 1: get the current temp file characters into a list: temp_list
+        #step 3: get the new information that is going to be saved to the list unless the pattern is just being removed
         values = []
         cell_widgets = []
         copies_exist = False
@@ -474,7 +485,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_delete_pattern_clicked(self):
         pattern_to_delete = self.frame_selection.currentIndex()
+        #reuse save pattern function 
+        self.on_pattern_saved(self.frame_selection.currentIndex())
         print("Deleting: " + str(pattern_to_delete) + "\n")
+
 
 
     def on_convert_clicked(self):
