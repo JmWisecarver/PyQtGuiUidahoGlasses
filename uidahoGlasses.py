@@ -135,7 +135,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Create a button to delete a pattern frame
         self.delete_pattern_button = QPushButton('remove pattern', self.side_widget)
         self.side_layout.addWidget(self.delete_pattern_button, 1)
-        self.delete_pattern_button.clicked.connect(lambda: self.on_delete_pattern_clicked())
+        self.delete_pattern_button.clicked.connect(lambda: self.on_delete_pattern_clicked(self.frame_selection.currentIndex()))
         # Create a button to save a pattern to the current frame
         self.save_pattern_button = QPushButton('save pattern', self.side_widget)
         self.side_layout.addWidget(self.save_pattern_button, 1)
@@ -144,7 +144,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Create a dropdown menu for pattern frame
         self.frame_selection = QtWidgets.QComboBox(self.side_widget)
         self.frame_selection.activated.connect(self.on_frame_clicked)
-        self.frame_selection.addItem('PATTERN 1')
+        self.frame_selection.addItem('Pattern 1')
         # Create an input box for integer input
         self.integer_input = QtWidgets.QLineEdit(self.side_widget)
         #add it to the side layout
@@ -250,10 +250,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 for i in range(0, len(self.fileStr)): 
                     temp_file.write(self.fileStr[i])
                 #add the correct number of patterns depending on '#' found
-                self.frame_selection.addItem('PATTERN 1')
+                self.frame_selection.addItem('Pattern 1')
                 for i in range(0, len(self.fileStr)):
                     if self.fileStr[i] == '#':
-                        self.frame_selection.addItem('PATTERN ' + str(self.frame_selection.count() + 1))
+                        self.frame_selection.addItem('Pattern ' + str(self.frame_selection.count() + 1))
                 self.fileName = file_name
                 self.save_action.setEnabled(True)
                 self.repopulate_grid(file_name, 0)
@@ -323,7 +323,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     cell_widget.g = colors[1]
                     cell_widget.b = colors[2]
                     cell_widget.setStyleSheet("background-color:rgb(" + cell_widget.r + "," + cell_widget.g + "," + cell_widget.b + ");")
-                    print("WAT")
 
                             
 
@@ -480,14 +479,38 @@ class MainWindow(QtWidgets.QMainWindow):
             save_file = open("TEMP", "w")
         else:
             save_file = open("TEMP", "a+")
-        self.frame_selection.addItem('PATTERN ' + str(self.frame_selection.count() + 1))
+        self.frame_selection.addItem('Pattern ' + str(self.frame_selection.count() + 1))
         save_file.write("#")
 
-    def on_delete_pattern_clicked(self):
+    def on_delete_pattern_clicked(self, index):
         pattern_to_delete = self.frame_selection.currentIndex()
         #reuse save pattern function 
         self.on_pattern_saved(self.frame_selection.currentIndex())
         print("Deleting: " + str(pattern_to_delete) + "\n")
+        #Get the strings with the pattern in question removed
+        temp_list_left, temp_list_right, final_list = self.remove_pattern(index)
+        print(final_list)
+        #rewrite the temp file to not have the pattern that has been removed
+        save_file = open("TEMP", "w")
+        #if the removed pattern is the first one a case must be made to remove the first '#' in final_list
+        if pattern_to_delete == 0:
+            save_file.write(final_list[1:])
+        else:
+            save_file.write(final_list)
+        #fix the frame_selection_indicies
+        self.remove_pattern_index(pattern_to_delete)
+        #clear the deleted display from the gui
+
+    def remove_pattern_index(self, index):
+        total = self.frame_selection.count()
+        self.frame_selection.setCurrentIndex(index-1)
+        self.frame_selection.clear()
+        for i in range(total - 1):
+            self.frame_selection.addItem("Pattern " + str(i+1))
+
+
+
+
 
 
 
