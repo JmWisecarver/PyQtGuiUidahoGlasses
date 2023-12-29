@@ -503,13 +503,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def remove_pattern_index(self, index):
         total = self.frame_selection.count()
-        self.frame_selection.setCurrentIndex(index-1)
         self.frame_selection.clear()
         for i in range(total - 1):
             self.frame_selection.addItem("Pattern " + str(i+1))
-
-
-
+        self.on_reset_clicked()
+        if (total > 1) and (index != 0):
+            self.repopulate_grid("TEMP", index-1)
+            self.frame_selection.setCurrentIndex(index-1)
+        elif (total > 1) and (index == 0):
+            self.repopulate_grid("TEMP", 1)
+            self.frame_selection.setCurrentIndex(index)
+        else:
+            self.on_reset_clicked()
+            self.frame_selection.addItem("Pattern 1")
+            self.frame_selection.setCurrentIndex(index)
 
 
 
