@@ -111,6 +111,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.central_widget = QtWidgets.QWidget(self)  # Create a new central widget
         self.setCentralWidget(self.central_widget)
 
+    
         #Make the central layout. This is how the main elements of the gui will be organized. New elements spawn to the right
         self.central_layout = QtWidgets.QHBoxLayout(self.central_widget)
         
@@ -128,6 +129,14 @@ class MainWindow(QtWidgets.QMainWindow):
         #Use Qvboxlayout so each new widget added to the side layout is added horizontally
         self.side_layout = QtWidgets.QVBoxLayout(self.side_widget)
         self.central_layout.addWidget(self.side_widget, 1)  # The side widget will take up 1 part of the window
+        #Create two buttons to easily switch what pattern is being viewed
+        self.arrow_widget = QtWidgets.QWidget(self.side_widget)
+        self.arrow_layout = QtWidgets.QHBoxLayout(self.arrow_widget)
+        self.side_layout.addWidget(self.arrow_widget, 0)
+        self.left_button = QPushButton('<<', self.arrow_widget)
+        self.right_button = QPushButton('>>', self.arrow_widget)
+        self.arrow_layout.addWidget(self.left_button)
+        self.arrow_layout.addWidget(self.right_button)
         # Create a button to add a pattern frame
         self.pattern_button = QPushButton('add pattern', self.side_widget)
         self.side_layout.addWidget(self.pattern_button, 1)
