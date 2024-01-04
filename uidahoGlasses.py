@@ -385,8 +385,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
     #This should load the frame number clicked from TEMP
     def on_frame_clicked(self, index):
+        #Check if pattern being clicked exists
+        self.frame_selection.count()
+        if index < 0:
+            print("index too low and does not exist")
+            return
+        if index >= self.frame_selection.count():
+            print("index too high and does not exist")
+            return
+        print(self.frame_selection.count())
         #index starts at 0, this will adjust for that
-        print("frame click", index+1)
         #step 1, seek the part of temp that has the number index
         with open("TEMP", 'r') as file:
                 self.fileStr = file.read()
@@ -481,6 +489,21 @@ class MainWindow(QtWidgets.QMainWindow):
         #step 5: save this new string to TEMP
         save_file = open("TEMP", "w")
         save_file.write(new_temp_file)
+    
+    def left_button_clicked(self):
+        self.on_frame_clicked(self.frame_selection.currentIndex()-1)
+        if(self.frame_selection.currentIndex()-1 > -1):
+            print("valid and can be swapped")
+            self.frame_selection.setCurrentIndex(self.frame_selection.currentIndex()-1)
+        print("LEFT")
+
+    #Display the next numbered pattern if it exists
+    def right_button_clicked(self):
+        self.on_frame_clicked(self.frame_selection.currentIndex()+1)
+        if(self.frame_selection.currentIndex()+1 < self.frame_selection.count()):
+            print("valid and can be swapped")
+            self.frame_selection.setCurrentIndex(self.frame_selection.currentIndex()+1)
+        print("RIGHT")
 
     # Hold all patterns in a temporary file for proper saving and navigation between patterns
     def on_pattern_clicked(self):
