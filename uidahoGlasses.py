@@ -137,6 +137,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_button = QPushButton('>>', self.arrow_widget)
         self.arrow_layout.addWidget(self.left_button)
         self.arrow_layout.addWidget(self.right_button)
+        self.left_button.clicked.connect(lambda: self.left_button_clicked())
+        self.right_button.clicked.connect(lambda: self.right_button_clicked())
         # Create a button to add a pattern frame
         self.pattern_button = QPushButton('add pattern', self.side_widget)
         self.side_layout.addWidget(self.pattern_button, 1)
