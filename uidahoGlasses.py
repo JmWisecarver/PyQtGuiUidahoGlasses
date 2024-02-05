@@ -84,6 +84,10 @@ class CellWidget(QtWidgets.QLabel):
         elif selected_value == "":
             #set the address to a value of -2 to denote it is not set
             self.value = -1
+            msg.setText("Error")
+            msg.setInformativeText('Address must be a digit.')
+            msg.setWindowTitle("Error")
+            msg.exec_()
             self.update_display()
         #if the toggle is on that increments the address then increment automatically.
         
@@ -538,6 +542,10 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def left_button_clicked(self):
         self.on_frame_clicked(self.frame_selection.currentIndex()-1)
+        if self.changes_made == True:
+            save_choice = QtGui.QMessageBox
+            save_choice.question(self,'', "Are you sure to reset all the values?", save_choice.Yes | save_choice.No)
+            print("hello?\n")
         if(self.frame_selection.currentIndex()-1 > -1):
             print("valid and can be swapped")
             self.frame_selection.setCurrentIndex(self.frame_selection.currentIndex()-1)
