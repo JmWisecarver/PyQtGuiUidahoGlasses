@@ -30,7 +30,7 @@ class CellWidget(QtWidgets.QLabel):
 
     def mousePressEvent(self, event):
 
-        selected_color = self.parent().parent().parent().parent().parent().color_selection.currentText()
+        #selected_color = self.parent().parent().parent().parent().parent().color_selection.currentText()
         selected_color_red = self.parent().parent().parent().parent().parent().red_input.text()
         selected_color_green = self.parent().parent().parent().parent().parent().green_input.text()
         selected_color_blue = self.parent().parent().parent().parent().parent().blue_input.text()
@@ -46,7 +46,7 @@ class CellWidget(QtWidgets.QLabel):
         self.g = selected_color_green
         self.b = selected_color_blue
         self.setStyleSheet("background-color:rgb(" + selected_color_red + "," + selected_color_green + "," + selected_color_blue + ")" + ";")  # Set the selected color
-        self.color = selected_color
+        #self.color = selected_color
         selected_value = self.parent().parent().parent().parent().parent().integer_input.text()  # Get the selected value from the input box
         if selected_value:
             self.value = int(selected_value)  # Update the value
@@ -129,6 +129,11 @@ class MainWindow(QtWidgets.QMainWindow):
         #Use Qvboxlayout so each new widget added to the side layout is added horizontally
         self.side_layout = QtWidgets.QVBoxLayout(self.side_widget)
         self.central_layout.addWidget(self.side_widget, 1)  # The side widget will take up 1 part of the window
+        # Create a dropdown menu for pattern frame
+        self.frame_selection = QtWidgets.QComboBox(self.side_widget)
+        self.frame_selection.activated.connect(self.on_frame_clicked)
+        self.frame_selection.addItem('Pattern 1')
+        self.side_layout.addWidget(self.frame_selection)
         #Create two buttons to easily switch what pattern is being viewed
         self.arrow_widget = QtWidgets.QWidget(self.side_widget)
         self.arrow_layout = QtWidgets.QHBoxLayout(self.arrow_widget)
@@ -152,10 +157,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.side_layout.addWidget(self.save_pattern_button, 1)
         # Make the save button so that you can overwrite saves
         self.save_pattern_button.clicked.connect(lambda: self.on_pattern_saved(self.frame_selection.currentIndex()))
-        # Create a dropdown menu for pattern frame
-        self.frame_selection = QtWidgets.QComboBox(self.side_widget)
-        self.frame_selection.activated.connect(self.on_frame_clicked)
-        self.frame_selection.addItem('Pattern 1')
         # Create an input box for integer input
         self.integer_input = QtWidgets.QLineEdit(self.side_widget)
         #add it to the side layout
@@ -177,18 +178,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.side_layout.addWidget(self.time_label, 1)
         self.side_layout.addWidget(self.time_input, 1)
 
+
         self.red_input = QtWidgets.QLineEdit(self.side_widget)
         self.green_input = QtWidgets.QLineEdit(self.side_widget)
         self.blue_input = QtWidgets.QLineEdit(self.side_widget)
         self.red_label = QtWidgets.QLabel("Red:")
-        self.green_label = QtWidgets.QLabel("Green")
-        self.blue_label = QtWidgets.QLabel("Blue")
-        self.side_layout.addWidget(self.red_label)
-        self.side_layout.addWidget(self.red_input)
-        self.side_layout.addWidget(self.green_label)
-        self.side_layout.addWidget(self.green_input)
-        self.side_layout.addWidget(self.blue_label)
-        self.side_layout.addWidget(self.blue_input)
+        self.green_label = QtWidgets.QLabel("Green:")
+        self.blue_label = QtWidgets.QLabel("Blue:")
+
+        self.color_widget = QtWidgets.QWidget(self.side_widget)
+        self.color_layout = QtWidgets.QHBoxLayout(self.color_widget)
+        self.side_layout.addWidget(self.color_widget)
+        self.color_layout.addWidget(self.red_label)
+        self.color_layout.addWidget(self.red_input)
+        self.color_layout.addStretch()
+        self.color_layout.addWidget(self.green_label)
+        self.color_layout.addWidget(self.green_input)
+        self.color_layout.addStretch()
+        self.color_layout.addWidget(self.blue_label)
+        self.color_layout.addWidget(self.blue_input)
         self.red_input.setText("0")
         self.green_input.setText("0")
         self.blue_input.setText("0")
@@ -200,32 +208,34 @@ class MainWindow(QtWidgets.QMainWindow):
 
         
         # Create a dropdown menu for color selection
-        self.color_selection = QtWidgets.QComboBox(self.side_widget)
-        self.color_selection.addItem('white')  # Add white #FFFFFF
-        self.color_selection.addItem('red')  # Add red #FF0000
-        self.color_selection.addItem('green')  # Add green #00FF00
-        self.color_selection.addItem('blue')  # Add blue #0000FF
-        self.side_layout.addWidget(self.color_selection, 1)
+        #self.color_selection = QtWidgets.QComboBox(self.side_widget)
+        #self.color_selection.addItem('white')  # Add white #FFFFFF
+        #self.color_selection.addItem('red')  # Add red #FF0000
+        #self.color_selection.addItem('green')  # Add green #00FF00
+        #self.color_selection.addItem('blue')  # Add blue #0000FF
+        #self.side_layout.addWidget(self.color_selection, 1)
 
         # Create a button to toggle eraser for grid spaces
         self.eraserToggle = False
         self.eraser_button = QPushButton('eraser', self.side_widget)
         self.eraser_button.setCheckable(True)
-        self.side_layout.addWidget(self.eraser_button, 1)
+        self.side_layout.addWidget(self.eraser_button)
         self.eraser_button.clicked.connect(lambda: self.on_eraser_clicked(self.eraserToggle))
         
 
         # Create a button to reset everything on the grid
         self.button = QPushButton('reset', self.side_widget)
-        self.side_layout.addWidget(self.button, 1)
+        self.side_layout.addWidget(self.button)
         self.button.clicked.connect(self.on_reset_clicked)
         # Create a button to save (not save as) everything on the grid
         self.button = QPushButton('save', self.side_widget)
-        self.side_layout.addWidget(self.button, 1)
+        self.side_layout.addWidget(self.button)
         self.button.clicked.connect(lambda: self.on_save_clicked(self.fileName))
 
         #populate the square_grid we added earlier. This can be changed later based on how comfy the square sizes are.
         self.square_grid_widget.populate_grid(30, 30)
+        self.side_layout.addStretch()
+
 
     def createMenuBar(self):
         menuBar = QMenuBar(self)
@@ -276,6 +286,8 @@ class MainWindow(QtWidgets.QMainWindow):
         #find the time value
         #for i in range(0,)
         frame_data = self.fileStr.split("#")
+        if not frame_data[index].split("||"):
+           print("split is invalid")
         grid_data = frame_data[index].split("||")
         for grid_information in grid_data:
             if grid_information == "":
@@ -578,6 +590,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 i = i+1
             if initial_text[i] == "#":
                 skip_text = True
+            if initial_text[i] == "#" and initial_text[i+1] == "(":
+                skip_text = False
             i = i + 1
         bind = QtWidgets.QInputDialog.getText(self, 'Input Dialog', 'Enter keybind:') 
         print(bind)
