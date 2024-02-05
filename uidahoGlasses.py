@@ -29,8 +29,8 @@ class CellWidget(QtWidgets.QLabel):
         self.label.setStyleSheet("color: white;") 
 
     def mousePressEvent(self, event):
-
-        #selected_color = self.parent().parent().parent().parent().parent().color_selection.currentText()
+        self.changes_made = True
+        msg = QMessageBox()
         selected_color_red = self.parent().parent().parent().parent().parent().red_input.text()
         selected_color_green = self.parent().parent().parent().parent().parent().green_input.text()
         selected_color_blue = self.parent().parent().parent().parent().parent().blue_input.text()
@@ -41,15 +41,43 @@ class CellWidget(QtWidgets.QLabel):
             self.value = -1
             self.setStyleSheet("background-color: " + "white" + ";")
             self.update_display()
+            self.changes_made = True
             return
-        self.r = selected_color_red
-        self.g = selected_color_green
-        self.b = selected_color_blue
-        self.setStyleSheet("background-color:rgb(" + selected_color_red + "," + selected_color_green + "," + selected_color_blue + ")" + ";")  # Set the selected color
+        #do input checking for red green and blue
+        if selected_color_red.isdigit() and selected_color_green.isdigit() and selected_color_blue.isdigit():
+            if (0 > int(selected_color_red) > 255) or ( 0 > int(selected_color_green) > 255) or (0 > int(selected_color_blue) > 255):
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Error")
+                msg.setInformativeText('All color values must be in a range of 0-255.')
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return
+            self.r = selected_color_red
+            self.g = selected_color_green
+            self.b = selected_color_blue
+        else:
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Error")
+            msg.setInformativeText('All color values must be in a range of 0-255.')
+            msg.setWindowTitle("Error")
+            msg.exec_()
+            return
         #self.color = selected_color
         selected_value = self.parent().parent().parent().parent().parent().integer_input.text()  # Get the selected value from the input box
         if selected_value:
-            self.value = int(selected_value)  # Update the value
+            if selected_value.isdigit():
+                self.setStyleSheet("background-color:rgb(" + selected_color_red + "," + selected_color_green + "," + selected_color_blue + ")" + ";")  # Set the selected color
+                self.value = int(selected_value)  # Update the value
+                self.changes_made = True
+            else:
+                msg.setText("Error")
+                msg.setInformativeText('Address must be a digit.')
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                self.r = 255
+                self.g = 255
+                self.b = 255
+                return
             if self.parent().parent().parent().parent().parent().increment.isChecked() == True:
                 self.parent().parent().parent().parent().parent().integer_input.setText(str(self.value+1))
             self.update_display()
@@ -102,6 +130,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.changes_made = False
         self.toggle_increment = False
         self.fileName = "UNK"
         self.fileStr = ""
@@ -203,17 +232,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.red_input.setFixedWidth(40)
         self.green_input.setFixedWidth(40)
         self.blue_input.setFixedWidth(40)
-    
-
-
-        
-        # Create a dropdown menu for color selection
-        #self.color_selection = QtWidgets.QComboBox(self.side_widget)
-        #self.color_selection.addItem('white')  # Add white #FFFFFF
-        #self.color_selection.addItem('red')  # Add red #FF0000
-        #self.color_selection.addItem('green')  # Add green #00FF00
-        #self.color_selection.addItem('blue')  # Add blue #0000FF
-        #self.side_layout.addWidget(self.color_selection, 1)
 
         # Create a button to toggle eraser for grid spaces
         self.eraserToggle = False
@@ -452,6 +470,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_pattern_saved(self, index):
         print("PATTERN SAVE CLICKED")
+        #Check to make sure a time is set before saving the pattern
+        input = self.time_input.text()
+        if input == "":
+            msg = QMessageBox()
+            msg.setWindowTitle("ERROR")
+            msg.setText("Pattern cannot be saved without a valid time input.")
+            msg.exec_()
+            return
+        elif not input.isdigit():
+            msg = QMessageBox()
+            msg.setWindowTitle("ERROR")
+            msg.setText("Pattern cannot be saved with a time input that is not a number.")
+            msg.exec_()
+            return
         temp_list_left = ""
         temp_list_right = ""
         final_list = ""
@@ -480,7 +512,7 @@ class MainWindow(QtWidgets.QMainWindow):
             msg = QMessageBox()
             msg.setWindowTitle("ERROR")
             msg.setText("Error: Two or more addresses in the grid are the same. The borders of the cells in the grids in question have been highlighted.")
-            x = msg.exec_()  # this will show our messagebox
+            msg.exec_()  # this will show our messagebox
             #Don't save anything to the file if there are any copies
             copies_exist = False
             return
