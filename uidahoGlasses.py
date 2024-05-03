@@ -6,6 +6,7 @@ from PyQt5.QtCore import *
 import sys
 import os
 
+
 class CellWidget(QtWidgets.QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -29,7 +30,7 @@ class CellWidget(QtWidgets.QLabel):
         self.label.setStyleSheet("color: white;") 
 
     def mousePressEvent(self, event):
-        self.changes_made = True
+        self.parent().parent().parent().parent().parent().changes_made = True
         msg = QMessageBox()
         selected_color_red = self.parent().parent().parent().parent().parent().red_input.text()
         selected_color_green = self.parent().parent().parent().parent().parent().green_input.text()
@@ -100,8 +101,6 @@ class CellWidget(QtWidgets.QLabel):
         else:
             self.setText("") # Show no address in the cell.
 
-
-
     
 class SquareGridWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -112,6 +111,7 @@ class SquareGridWidget(QtWidgets.QWidget):
         self.resize(size, size)
         self.setStyleSheet("background-color: black;")  # Set the background color of the main window
         self.square_number = 0
+        self.changes_made = parent.parent().parent().changes_made
 
     def populate_grid(self, row_count, column_count, cell_size=50, spacing=1):
         for i in range(row_count):
@@ -120,6 +120,7 @@ class SquareGridWidget(QtWidgets.QWidget):
                 cell_widget.x_coord = j
                 cell_widget.y_coord = i
                 self.grid_layout.addWidget(cell_widget, i, j)
+                cell_widget.changes_made = self.changes_made
         self.grid_layout.setSpacing(1)  # set minimum spacing in pixels
         self.grid_layout.setContentsMargins(1, 1, 1, 1)  # set margins in pixels
         #This fixedsize may not be useful later thanks to the scroll area, I may just force the grid to always have an equal number of rows and columns
@@ -151,6 +152,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #Make an area with scroll bars where the grid is capable of being placed.
         self.scroll_area = QtWidgets.QScrollArea(self.central_widget)
         self.square_grid_widget = SquareGridWidget(self.scroll_area)
+        self.changes_made = self.square_grid_widget.changes_made
         self.scroll_area.setWidgetResizable(True)
         #Set the widget that has the scroll area to the class known as square_grid_widget
         self.scroll_area.setWidget(self.square_grid_widget)
@@ -175,7 +177,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_button = QPushButton('>>', self.arrow_widget)
         self.arrow_layout.addWidget(self.left_button)
         self.arrow_layout.addWidget(self.right_button)
-        self.left_button.clicked.connect(lambda: self.left_button_clicked())
+        self.left_button.clicked.connect(lambda: self.left_button_clicked(self.changes_made))
         self.right_button.clicked.connect(lambda: self.right_button_clicked())
         # Create a button to add a pattern frame
         self.pattern_button = QPushButton('add pattern', self.side_widget)
@@ -189,7 +191,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.save_pattern_button = QPushButton('save pattern', self.side_widget)
         self.side_layout.addWidget(self.save_pattern_button, 1)
         # Make the save button so that you can overwrite saves
-        self.save_pattern_button.clicked.connect(lambda: self.on_pattern_saved(self.frame_selection.currentIndex()))
+        self.save_pattern_button.clicked.connect(lambda: self.on_pattern_saved(self.frame_selection.currentIndex(), self.changes_made))
         # Create an input box for integer input
         self.integer_input = QtWidgets.QLineEdit(self.side_widget)
         #add it to the side layout
@@ -472,7 +474,8 @@ class MainWindow(QtWidgets.QMainWindow):
         return temp_list_left, temp_list_right, final_list
 
 
-    def on_pattern_saved(self, index):
+    def on_pattern_saved(self, index, changes_made):
+        self.parent().changes_made = False
         print("PATTERN SAVE CLICKED")
         #Check to make sure a time is set before saving the pattern
         input = self.time_input.text()
@@ -540,13 +543,22 @@ class MainWindow(QtWidgets.QMainWindow):
         save_file = open("TEMP", "w")
         save_file.write(new_temp_file)
     
-    def left_button_clicked(self):
-        self.on_frame_clicked(self.frame_selection.currentIndex()-1)
-        if self.changes_made == True:
-            save_choice = QtGui.QMessageBox
-            save_choice.question(self,'', "Are you sure to reset all the values?", save_choice.Yes | save_choice.No)
-            print("hello?\n")
+    def left_button_clicked(self, changes_made):
+        save_choice = QMessageBox()
+        if changes_made == True:
+            save_choice = QMessageBox()
+            #msg.setIcon(QMessageBox.Critical)
+            #msg.setText("Error")
+            #msg.setInformativeText('Changes were made on this window, do you want to save before moving on?')
+            #msg.setWindowTitle("Error")
+            #msg.exec_()
+            ret = save_choice.question(self,'', "Unsaved work detected. Do you wish to save?", save_choice.Yes | save_choice.No)
+            if(ret == save_choice.Yes):
+                self.on_pattern_saved(self.frame_selection.currentIndex(), changes_made)
+            else:
+                self.changes_made = False
         if(self.frame_selection.currentIndex()-1 > -1):
+            self.on_frame_clicked(self.frame_selection.currentIndex()-1)
             print("valid and can be swapped")
             self.frame_selection.setCurrentIndex(self.frame_selection.currentIndex()-1)
         print("LEFT")
