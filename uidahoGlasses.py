@@ -178,7 +178,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.arrow_layout.addWidget(self.left_button)
         self.arrow_layout.addWidget(self.right_button)
         self.left_button.clicked.connect(lambda: self.left_button_clicked(self.changes_made))
-        self.right_button.clicked.connect(lambda: self.right_button_clicked())
+        self.right_button.clicked.connect(lambda: self.right_button_clicked(self.changes_made))
         # Create a button to add a pattern frame
         self.pattern_button = QPushButton('add pattern', self.side_widget)
         self.side_layout.addWidget(self.pattern_button, 1)
@@ -475,7 +475,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def on_pattern_saved(self, index, changes_made):
-        self.parent().changes_made = False
+        changes_made = False
         print("PATTERN SAVE CLICKED")
         #Check to make sure a time is set before saving the pattern
         input = self.time_input.text()
@@ -547,14 +547,10 @@ class MainWindow(QtWidgets.QMainWindow):
         save_choice = QMessageBox()
         if changes_made == True:
             save_choice = QMessageBox()
-            #msg.setIcon(QMessageBox.Critical)
-            #msg.setText("Error")
-            #msg.setInformativeText('Changes were made on this window, do you want to save before moving on?')
-            #msg.setWindowTitle("Error")
-            #msg.exec_()
             ret = save_choice.question(self,'', "Unsaved work detected. Do you wish to save?", save_choice.Yes | save_choice.No)
             if(ret == save_choice.Yes):
                 self.on_pattern_saved(self.frame_selection.currentIndex(), changes_made)
+                return
             else:
                 self.changes_made = False
         if(self.frame_selection.currentIndex()-1 > -1):
@@ -564,9 +560,18 @@ class MainWindow(QtWidgets.QMainWindow):
         print("LEFT")
 
     #Display the next numbered pattern if it exists
-    def right_button_clicked(self):
-        self.on_frame_clicked(self.frame_selection.currentIndex()+1)
+    def right_button_clicked(self, changes_made):
+        save_choice = QMessageBox()
+        if changes_made == True:
+            save_choice = QMessageBox()
+            ret = save_choice.question(self,'', "Unsaved work detected. Do you wish to save?", save_choice.Yes | save_choice.No)
+            if(ret == save_choice.Yes):
+                self.on_pattern_saved(self.frame_selection.currentIndex(), changes_made)
+                return
+            else:
+                self.changes_made = False
         if(self.frame_selection.currentIndex()+1 < self.frame_selection.count()):
+            self.on_frame_clicked(self.frame_selection.currentIndex()+1)
             print("valid and can be swapped")
             self.frame_selection.setCurrentIndex(self.frame_selection.currentIndex()+1)
         print("RIGHT")
