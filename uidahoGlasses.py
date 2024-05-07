@@ -467,7 +467,11 @@ class MainWindow(QtWidgets.QMainWindow):
                         found_end = True
                     if found_end == True and i < len(self.fileStr):
                         temp_list_right += self.fileStr[i]
+                
+                if self.fileStr[0] == '#' and removal_position == 0:
+                    temp_list_right += '#'
                 final_list = final_list + temp_list_left + temp_list_right
+                
                 print("BEFORE\n" + self.fileStr + "\nBEFORE")
                 print("AFTER\n" + final_list + "\nAFTER")
         #Return the variables that will allow you to add or replace or do something else
@@ -475,7 +479,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def on_pattern_saved(self, index, changes_made):
-        changes_made = False
+        #changes_made = False
         print("PATTERN SAVE CLICKED")
         #Check to make sure a time is set before saving the pattern
         input = self.time_input.text()
@@ -650,8 +654,10 @@ class MainWindow(QtWidgets.QMainWindow):
             if initial_text[i] == "#" and initial_text[i+1] == "(":
                 skip_text = False
             i = i + 1
+        repeat = QtWidgets.QInputDialog.getText(self, 'Input Dialog', 'Repeating? Y/N')
         bind = QtWidgets.QInputDialog.getText(self, 'Input Dialog', 'Enter keybind:') 
         print(bind)
+        post_text += repeat[0]
         post_text += bind[0]
         print(post_text)
         converted_file.write(post_text)
