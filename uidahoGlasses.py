@@ -6,7 +6,7 @@ from PyQt5.QtCore import *
 import sys
 import os
 
-
+#The data that makes up the individual square cells
 class CellWidget(QtWidgets.QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -29,7 +29,9 @@ class CellWidget(QtWidgets.QLabel):
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setStyleSheet("color: white;") 
 
+    #When the mouse is clicked on the cell widget
     def mousePressEvent(self, event):
+        #When a cell is clicked a change has been detected. Used for save checking
         self.parent().parent().parent().parent().parent().changes_made = True
         msg = QMessageBox()
         selected_color_red = self.parent().parent().parent().parent().parent().red_input.text()
@@ -37,14 +39,15 @@ class CellWidget(QtWidgets.QLabel):
         selected_color_blue = self.parent().parent().parent().parent().parent().blue_input.text()
         eraser_status = self.parent().parent().parent().parent().parent().eraserToggle
         print(eraser_status)
-        if eraser_status == True:   # If the eraser is enabled return clicked on square to default
+        # If the eraser is enabled return clicked on square to default
+        if eraser_status == True:
             self.color = "white"
             self.value = -1
             self.setStyleSheet("background-color: " + "white" + ";")
             self.update_display()
             self.changes_made = True
             return
-        #do input checking for red green and blue
+        #Check to see what color the cell is being set to
         if selected_color_red.isdigit() and selected_color_green.isdigit() and selected_color_blue.isdigit():
             if (0 > int(selected_color_red) > 255) or ( 0 > int(selected_color_green) > 255) or (0 > int(selected_color_blue) > 255):
                 msg.setIcon(QMessageBox.Critical)
@@ -63,7 +66,7 @@ class CellWidget(QtWidgets.QLabel):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
-        #self.color = selected_color
+        #Check to see what address number is being used for the cell
         selected_value = self.parent().parent().parent().parent().parent().integer_input.text()  # Get the selected value from the input box
         if selected_value:
             if selected_value.isdigit():
@@ -79,6 +82,7 @@ class CellWidget(QtWidgets.QLabel):
                 self.g = 255
                 self.b = 255
                 return
+            #if the toggle is on that increments the address then increment automatically.
             if self.parent().parent().parent().parent().parent().increment.isChecked() == True:
                 self.parent().parent().parent().parent().parent().integer_input.setText(str(self.value+1))
             self.update_display()
@@ -90,18 +94,15 @@ class CellWidget(QtWidgets.QLabel):
             msg.setWindowTitle("Error")
             msg.exec_()
             self.update_display()
-        #if the toggle is on that increments the address then increment automatically.
-        
-
-
-
     def update_display(self):
+        # Display the value as a string
         if int(self.value) > -1:
-            self.setText(str(self.value))  # Display the value as a string
+            self.setText(str(self.value)) 
+            # Show no address in the cell.
         else:
-            self.setText("") # Show no address in the cell.
+            self.setText("")
 
-    
+#This class is used to deal with the grid widget in the GUI
 class SquareGridWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -113,7 +114,8 @@ class SquareGridWidget(QtWidgets.QWidget):
         self.square_number = 0
         self.changes_made = parent.parent().parent().changes_made
 
-    def populate_grid(self, row_count, column_count, cell_size=50, spacing=1):
+    #Add all of the cells into the grid
+    def populate_grid(self, row_count, column_count, cell_size=80, spacing=1):
         for i in range(row_count):
             for j in range(column_count):
                 cell_widget = CellWidget(self)
@@ -444,20 +446,21 @@ class MainWindow(QtWidgets.QMainWindow):
         temp_list_left = "" 
         temp_list_right = "" 
         final_list = ""
-        #step 1: get the current temp file characters into a list: temp_list
+        #Open the temp file and put the current contents into a file string variable
         with open("TEMP", 'r') as file:
                 self.fileStr = file.read()
                 print(self.fileStr + " " + str(index))
-        #step 2: find the information that is going to be removed and save everything else to two variables temp_list_left, and temp_list_right
+                #Find the information that is going to be removed and save everything else to two variables temp_list_left, and temp_list_right
                 number_found = 0
                 removal_position = 0
+                #These ifs and for are to check what range should be removed from the file
+                #Could be done better, a lot of extra logic for edge cases
                 if index != 0:
                     for i in range(0, len(self.fileStr)):
                         if self.fileStr[i] == '#':
                             number_found = number_found + 1
                             if index == number_found:
                                 removal_position = i
-                print(removal_position)
                 if index != 0:
                     for i in range(0, removal_position):
                         temp_list_left += self.fileStr[i]
@@ -467,20 +470,21 @@ class MainWindow(QtWidgets.QMainWindow):
                         found_end = True
                     if found_end == True and i < len(self.fileStr):
                         temp_list_right += self.fileStr[i]
-                
-                if self.fileStr[0] == '#' and removal_position == 0:
-                    temp_list_right += '#'
+                if len(self.fileStr) > 0:
+                    if self.fileStr[0] == '#' and removal_position == 0:
+                        temp_list_right += '#'
                 final_list = final_list + temp_list_left + temp_list_right
-                
+                #Printout for debugging in the console, showing what was removed from the string
                 print("BEFORE\n" + self.fileStr + "\nBEFORE")
                 print("AFTER\n" + final_list + "\nAFTER")
         #Return the variables that will allow you to add or replace or do something else
         return temp_list_left, temp_list_right, final_list
 
 
+    #Function to save changes to a pattern
     def on_pattern_saved(self, index, changes_made):
-        #changes_made = False
         print("PATTERN SAVE CLICKED")
+        self.changes_made = False
         #Check to make sure a time is set before saving the pattern
         input = self.time_input.text()
         if input == "":
@@ -489,6 +493,7 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.setText("Pattern cannot be saved without a valid time input.")
             msg.exec_()
             return
+        #Check to make sure that the time set is a digit
         elif not input.isdigit():
             msg = QMessageBox()
             msg.setWindowTitle("ERROR")
@@ -500,30 +505,30 @@ class MainWindow(QtWidgets.QMainWindow):
         final_list = ""
         temp_list_left, temp_list_right, final_list = self.remove_pattern(index)
         print("AFTER\n" + final_list + "\nAFTER")
-        #step 1: get the current temp file characters into a list: temp_list
         #step 3: get the new information that is going to be saved to the list unless the pattern is just being removed
         values = []
         cell_widgets = []
         copies_exist = False
 
+        #For all cells in the grid, add all cells to a list
         for i in range(0, self.square_grid_widget.grid_layout.count()):
             cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
             if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
                 values.append(cell_widget.value)
                 cell_widgets.append(cell_widget)
-        #Check for duplicates in the for loop
+        #Check for duplicate addresses used in the for loop
         for i, value in enumerate(values):
-            if values.count(value) > 1:  # If the value appears more than once
+            if values.count(value) > 1:
+                #When duplicate addresses are found, give the cells a border so the user can see where the copies are
                 if int(cell_widgets[i].value) > -1:
-                    #Changed this to highlightcell_widgets[i].setStyleSheet("background-color:rgb(" + str(cell_widgets[i].r) + "," + str(cell_widgets[i].g) + "," + str(cell_widgets[i].b) + ");")
                     cell_widgets[i].setStyleSheet("border: 3px solid black; background-color:rgb(" + str(cell_widgets[i].r) + "," + str(cell_widgets[i].g) + "," + str(cell_widgets[i].b) + ");")
                     copies_exist = True
+        #If there are copies display the error to the user
         if copies_exist == True:
-            #display error message for the address values.
             msg = QMessageBox()
             msg.setWindowTitle("ERROR")
             msg.setText("Error: Two or more addresses in the grid are the same. The borders of the cells in the grids in question have been highlighted.")
-            msg.exec_()  # this will show our messagebox
+            msg.exec_()
             #Don't save anything to the file if there are any copies
             copies_exist = False
             return
@@ -531,32 +536,36 @@ class MainWindow(QtWidgets.QMainWindow):
         temp_insert = ""
         if index != 0:
             temp_insert = "#"
+        #For all cells in the grid, if the cell has value, store the data in a string
         for i in range(self.square_grid_widget.grid_layout.count()):
             cell_widget = self.square_grid_widget.grid_layout.itemAt(i).widget()
-            if isinstance(cell_widget, CellWidget):  # Check if the widget is a CellWidget
+            #Check if the widget is a CellWidget
+            if isinstance(cell_widget, CellWidget):
                 if int(cell_widget.value) != -1: 
-                    unchanged_color = cell_widgets[i].color
-                    #cell_widget.setStyleSheet("border: 1px white; background-color: " + unchanged_color + ";")
                     cell_widget.setStyleSheet("border: 1px white; background-color:rgb(" + cell_widget.r + "," + cell_widget.g + "," + cell_widget.b + ");")
                     temp_insert = temp_insert + str(cell_widget.x_coord) + "," + str(cell_widget.y_coord) + "|" + str(cell_widget.value) + "|" + cell_widget.r + "[" + cell_widget.g + "[" +  cell_widget.b + "||"
         temp_insert = temp_insert + "(" + self.time_input.text() + ")"
         print(temp_insert)
-        #step 4: make a new variable and save it to the new string like this new_temp_file = temp_list_left + new_string + temp_list_right
+        #Make a new variable and save it to the new string like this new_temp_file = temp_list_left + new_string + temp_list_right
         new_temp_file = temp_list_left + temp_insert + temp_list_right
-        #step 5: save this new string to TEMP
+        #Save this new string to TEMP
         save_file = open("TEMP", "w")
         save_file.write(new_temp_file)
     
+    #Look at a lower pattern number pattern
     def left_button_clicked(self, changes_made):
         save_choice = QMessageBox()
+        #If changes have been made recently, prompt the user to save their pattern
         if changes_made == True:
             save_choice = QMessageBox()
             ret = save_choice.question(self,'', "Unsaved work detected. Do you wish to save?", save_choice.Yes | save_choice.No)
             if(ret == save_choice.Yes):
                 self.on_pattern_saved(self.frame_selection.currentIndex(), changes_made)
+                changes_made = False
                 return
             else:
                 self.changes_made = False
+        #Check to see if its actually possible to go to a lower pattern
         if(self.frame_selection.currentIndex()-1 > -1):
             self.on_frame_clicked(self.frame_selection.currentIndex()-1)
             print("valid and can be swapped")
@@ -571,9 +580,11 @@ class MainWindow(QtWidgets.QMainWindow):
             ret = save_choice.question(self,'', "Unsaved work detected. Do you wish to save?", save_choice.Yes | save_choice.No)
             if(ret == save_choice.Yes):
                 self.on_pattern_saved(self.frame_selection.currentIndex(), changes_made)
+                changes_made = False
                 return
             else:
                 self.changes_made = False
+        #Check to see if its actually possible to go to a higher pattern
         if(self.frame_selection.currentIndex()+1 < self.frame_selection.count()):
             self.on_frame_clicked(self.frame_selection.currentIndex()+1)
             print("valid and can be swapped")
