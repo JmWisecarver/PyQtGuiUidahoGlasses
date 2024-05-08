@@ -1,3 +1,9 @@
+#   Jeremy Wisecarver
+#   May 8 2024
+#   Half-Time tool-kit pattern creator
+#   Uses Python3 with PyQt5
+#   A GUI to help create the patterns for the idaho band glasses
+
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
@@ -139,6 +145,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.changes_made = False
         self.toggle_increment = False
+        self.lastFrame = 0
         self.fileName = "UNK"
         self.fileStr = ""
 
@@ -425,6 +432,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     #This should load the frame number clicked from TEMP
     def on_frame_clicked(self, index):
+        print("Frame index is " + str(index))
         #Check if pattern being clicked exists
         self.frame_selection.count()
         if index < 0:
@@ -433,13 +441,22 @@ class MainWindow(QtWidgets.QMainWindow):
         if index >= self.frame_selection.count():
             print("index too high and does not exist")
             return
+        print("Last frame is " + str(self.lastFrame))
         print(self.frame_selection.count())
         #index starts at 0, this will adjust for that
         #step 1, seek the part of temp that has the number index
+        save_choice = QMessageBox()
+        if self.changes_made == True:
+            save_choice = QMessageBox()
+            ret = save_choice.question(self,'', "Unsaved work detected. Do you wish to save?", save_choice.Yes | save_choice.No)
+            if(ret == save_choice.Yes):
+                self.on_pattern_saved(self.lastFrame, self.changes_made)
+                self.changes_made = False
         with open("TEMP", 'r') as file:
                 self.fileStr = file.read()
                 self.save_action.setEnabled(True)
                 self.repopulate_grid("TEMP", index)
+                self.lastFrame = index
 
     #Used to get a string that does not include a pattern
     def remove_pattern(self, index):
@@ -562,6 +579,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if(ret == save_choice.Yes):
                 self.on_pattern_saved(self.frame_selection.currentIndex(), changes_made)
                 changes_made = False
+                self.lastFrame = self.frame_selection.currentIndex()
                 return
             else:
                 self.changes_made = False
@@ -570,6 +588,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.on_frame_clicked(self.frame_selection.currentIndex()-1)
             print("valid and can be swapped")
             self.frame_selection.setCurrentIndex(self.frame_selection.currentIndex()-1)
+            self.lastFrame = self.frame_selection.currentIndex()
         print("LEFT")
 
     #Display the next numbered pattern if it exists
@@ -589,6 +608,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.on_frame_clicked(self.frame_selection.currentIndex()+1)
             print("valid and can be swapped")
             self.frame_selection.setCurrentIndex(self.frame_selection.currentIndex()+1)
+            self.lastFrame = self.frame_selection.currentIndex()
         print("RIGHT")
 
     # Hold all patterns in a temporary file for proper saving and navigation between patterns
@@ -628,17 +648,20 @@ class MainWindow(QtWidgets.QMainWindow):
         if (total > 1) and (index != 0):
             self.repopulate_grid("TEMP", index-1)
             self.frame_selection.setCurrentIndex(index-1)
+            self.lastFrame = self.frame_selection.currentIndex()
         elif (total > 1) and (index == 0):
             self.repopulate_grid("TEMP", 1)
             self.frame_selection.setCurrentIndex(index)
+            self.lastFrame = self.frame_selection.currentIndex()
         else:
             self.on_reset_clicked()
             self.frame_selection.addItem("Pattern 1")
             self.frame_selection.setCurrentIndex(index)
+            self.lastFrame = self.frame_selection.currentIndex()
 
 
 
-
+    #Take the contents of a saved file and change it to an ht13 file to be read by the ht13 toolkit
     def on_convert_clicked(self):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
