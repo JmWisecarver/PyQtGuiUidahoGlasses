@@ -260,10 +260,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button = QPushButton('reset', self.side_widget)
         self.side_layout.addWidget(self.button)
         self.button.clicked.connect(self.on_reset_clicked)
-        # Create a button to save (not save as) everything on the grid
-        self.button = QPushButton('save', self.side_widget)
-        self.side_layout.addWidget(self.button)
-        self.button.clicked.connect(lambda: self.on_save_clicked(self.fileName))
 
         #populate the square_grid we added earlier. This can be changed later based on how comfy the square sizes are.
         self.square_grid_widget.populate_grid(30, 30)
@@ -380,15 +376,13 @@ class MainWindow(QtWidgets.QMainWindow):
                     cell_widget.b = colors[2]
                     cell_widget.setStyleSheet("background-color:rgb(" + cell_widget.r + "," + cell_widget.g + "," + cell_widget.b + ");")
 
-                            
-
-
+    #Standard save file as functionality
     def save_file_as(self):
         print("SAVED AS!")
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self,"QFileDialog.getSaveFileName()", "", "All Files (*)", options=options)
-        if file_name:
+        if file_name and file_name != "UNK":
             self.fileName = file_name
             self.save_action.setEnabled(True)
             self.on_save_clicked(file_name)
@@ -454,7 +448,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.changes_made = False
         with open("TEMP", 'r') as file:
                 self.fileStr = file.read()
-                self.save_action.setEnabled(True)
+                #self.save_action.setEnabled(True)
                 self.repopulate_grid("TEMP", index)
                 self.lastFrame = index
 
