@@ -193,9 +193,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.side_layout.addWidget(self.pattern_button, 1)
         self.pattern_button.clicked.connect(lambda: self.on_pattern_clicked())
         # Create a button to delete a pattern frame
-        self.delete_pattern_button = QPushButton('remove pattern', self.side_widget)
-        self.side_layout.addWidget(self.delete_pattern_button, 1)
-        self.delete_pattern_button.clicked.connect(lambda: self.on_delete_pattern_clicked(self.frame_selection.currentIndex()))
+        #self.delete_pattern_button = QPushButton('remove pattern', self.side_widget)
+        #self.side_layout.addWidget(self.delete_pattern_button, 1)
+        #self.delete_pattern_button.clicked.connect(lambda: self.on_delete_pattern_clicked(self.frame_selection.currentIndex()))
         # Create a button to save a pattern to the current frame
         self.save_pattern_button = QPushButton('save pattern', self.side_widget)
         self.side_layout.addWidget(self.save_pattern_button, 1)
@@ -617,7 +617,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_delete_pattern_clicked(self, index):
         pattern_to_delete = self.frame_selection.currentIndex()
         #reuse save pattern function 
-        self.on_pattern_saved(self.frame_selection.currentIndex())
+        self.on_pattern_saved(self.frame_selection.currentIndex(), self.changes_made)
         print("Deleting: " + str(pattern_to_delete) + "\n")
         #Get the strings with the pattern in question removed
         temp_list_left, temp_list_right, final_list = self.remove_pattern(index)
